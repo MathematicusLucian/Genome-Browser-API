@@ -2,7 +2,8 @@ import logging
 from venv import logger
 from annotated_types import T
 import pandas as pd
-import sqlite3
+import uuid
+import genomedatabase
 from utils import load_file
 
 def load_data(filename_with_path, names, straight=False):
@@ -14,12 +15,13 @@ def load_data(filename_with_path, names, straight=False):
 class GenomeBrowser(object):
     patient_genome_df = pd.DataFrame() | None
     snp_pairs_df = pd.DataFrame() | None
-    genome_database = None 
+    genome_database = genomedatabase.GenomeDatabase()  
 
     def __init__(self, snp_pairs_file_name_with_path=None, genome_database=None):
-        self.create_tables()
+        self.genome_database = genome_database
+        self.genome_database.create_tables()
         if snp_pairs_file_name_with_path is not None:
-            self.snp_pairs_df = self.load_snp_pairs_df(snp_pairs_file_name_with_path)
+            self.load_snp_pairs_df(snp_pairs_file_name_with_path)
  
     def extract_genotype_info(self, df):
         df['RSID'] = df['RSID_Genotypes'].str.extract(r'(Rs\d+)\(')
@@ -38,14 +40,15 @@ class GenomeBrowser(object):
         snp_df.columns = new_cols
         snp_df[index_column_name] = snp_df[index_column_name].map(lambda x : x.lower())
         if snp_df is not None and self.genome_database is not None:
-            self.genome_database.save_to_db(snp_df, 'snp_pairs')
-            return snp_df
+            self.genome_database.save_snp_pairs_to_db(snp_df) 
+            self.snp_pairs_df = snp_df
         else:
             raise TypeError("No SNP data loaded.")
         
     def load_genome(self, genome_file_name_with_path):
         self.patient_genome_df = load_data(genome_file_name_with_path, names=["rsid", "chromosome", "position", "genotype"])
-        self.save_to_db(self.patient_genome_df, 'genome_data')
+        if self.patient_genome_df is not None and self.genome_database is not None:
+            self.genome_database.update_patient_and_genome_data(self.patient_genome_df, str(uuid.uuid4()), genome_file_name_with_path)
         return self.patient_genome_df.size
 
     def retrieve_data_by_column(self, df, column_name, key_to_find):
@@ -91,14 +94,18 @@ class GenomeBrowser(object):
         #     raise TypeError(f"No gene variant found for {key_to_find}.")
 
     def fetch_full_report(self):
-        patient_df = self.snp_pairs_df
-        snp_df = self.patient_genome_df
-        full_report_gene_variant_df = pd.merge(patient_df, snp_df, on='rsid', how='inner')
-        snp_pairs_genotype = full_report_gene_variant_df.allele1 + full_report_gene_variant_df.allele2
-        matching_merged_df = full_report_gene_variant_df[(full_report_gene_variant_df['genotype'] == snp_pairs_genotype) | (full_report_gene_variant_df['genotype'].str[::-1] == snp_pairs_genotype)]
-        pd.set_option('display.max_rows', 1000)
-        if matching_merged_df is not None:
-            matching_merged_df.head(5)
-            return matching_merged_df
-        else:
-            raise TypeError("No gene variants found.")
+        patient_data_as_list = self.genome_database.fetch_joined_patient_data()
+        return patient_data_as_list
+        # patient_df = pd.DataFrame(patient_data_as_list[1:], columns=patient_data_as_list[0])
+        # return patient_df
+        # snp_data_as_list = self.genome_database.fetch_snp_pairs_data()
+        # snp_df = pd.DataFrame(snp_data_as_list[1:], columns=snp_data_as_list[0])
+        # full_report_gene_variant_df = pd.merge(patient_df, snp_df, on='rsid', how='inner')
+        # snp_pairs_genotype = full_report_gene_variant_df.allele1 + full_report_gene_variant_df.allele2
+        # matching_merged_df = full_report_gene_variant_df[(full_report_gene_variant_df['genotype'] == snp_pairs_genotype) | (full_report_gene_variant_df['genotype'].str[::-1] == snp_pairs_genotype)]
+        # pd.set_option('display.max_rows', 1000)
+        # if matching_merged_df is not None:
+        #     matching_merged_df.head(5)
+        #     return matching_merged_df
+        # else:
+        #     raise TypeError("No gene variants found.")

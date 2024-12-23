@@ -2,6 +2,11 @@
 genomebrowser/
 .env
 
+# Database
+*.db
+**.db
+**/**.db 
+
 # IDE
 .vscode
 

@@ -1,52 +1,65 @@
-import sqlite3
-import uuid
+from sqlite3worker import Sqlite3Worker
 
 class GenomeDatabase(object):
-    def __init__(self, db_path=':memory:'):
-        self.conn = sqlite3.connect(db_path)
+    __db_path = None
+    sql_worker = ':memory:'
+
+    def __init__(self):
+        self.__db_path = "./data/genomes/genome.db" 
+        self.sql_worker = Sqlite3Worker(self.__db_path) 
 
     def create_tables(self):
-        with self.conn:
-            self.conn.execute('''
-                CREATE TABLE IF NOT EXISTS snp_pairs (
-                    rsid_genotypes TEXT,
-                    magnitude REAL,
-                    risk REAL,
-                    notes TEXT,
-                    rsid TEXT,
-                    allele1 TEXT,
-                    allele2 TEXT,
-                    PRIMARY KEY (rsid_genotypes)
-                )
-            ''')
-            self.conn.execute('''
-                CREATE TABLE IF NOT EXISTS patients (
-                    patient_id TEXT PRIMARY KEY,
-                    patient_name TEXT
-                )
-            ''')
-            self.conn.execute('''
-                CREATE TABLE IF NOT EXISTS patient_genome_data (
-                    uuid TEXT PRIMARY KEY,
-                    rsid TEXT,
-                    patient_id TEXT,
-                    chromosome TEXT,
-                    position INTEGER,
-                    genotype TEXT,
-                    FOREIGN KEY(patient_id) REFERENCES patients(patient_id)
-                )
-            ''')
+        self.sql_worker.execute('''
+            CREATE TABLE IF NOT EXISTS snp_pairs (
+                rsid_genotypes TEXT NOT NULL,
+                magnitude REAL,
+                risk REAL,
+                notes TEXT,
+                rsid TEXT NOT NULL,
+                allele1 TEXT NOT NULL,
+                allele2 TEXT NOT NULL,
+                PRIMARY KEY (rsid_genotypes)
+                UNIQUE (rsid_genotypes)
+            )
+        ''')
+        self.sql_worker.execute('''
+            CREATE TABLE IF NOT EXISTS patients (
+                patient_id TEXT PRIMARY KEY,
+                patient_name TEXT
+            )
+        ''')
+        self.sql_worker.execute('''
+            CREATE TABLE IF NOT EXISTS patient_genome_data (
+                rsid TEXT NOT NULL,
+                patient_id TEXT NOT NULL,
+                chromosome TEXT NOT NULL,
+                position INTEGER NOT NULL,
+                genotype TEXT NOT NULL,
+                FOREIGN KEY(patient_id) REFERENCES patients(patient_id),
+                UNIQUE (patient_id, rsid)
+            )
+        ''') 
+
+    def close_connection(self):
+        self.sql_worker.close()
 
     # Write/Create/Update
 
-    def update_or_insert_snp_pairs(self, rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2):
+    # SNP Pairs
+
+    def update_or_insert_snp_pair(self, rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2):
         query = '''
             INSERT INTO snp_pairs (rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(rsid_genotypes) DO UPDATE SET magnitude=excluded.magnitude, risk=excluded.risk, notes=excluded.notes, rsid=excluded.rsid, allele1=excluded.allele1, allele2=excluded.allele2
         '''
-        self.conn.execute(query, (rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2))
-        self.conn.commit()
+        self.sql_worker.execute(query, (rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2))
+
+    def save_snp_pairs_to_db(self, snp_df):
+        for index, row in snp_df.iterrows():
+            self.update_or_insert_snp_pair(row['rsid_genotypes'], row['magnitude'], row['risk'], row['notes'], row['rsid'], row['allele1'], row['allele2'])
+
+    # Patient Genome Data
 
     def update_or_insert_patient(self, patient_id, patient_name):
         query = '''
@@ -54,23 +67,29 @@ class GenomeDatabase(object):
             VALUES (?, ?)
             ON CONFLICT(patient_id) DO UPDATE SET patient_name=excluded.patient_name
         '''
-        self.conn.execute(query, (patient_id, patient_name))
-        self.conn.commit()
+        self.sql_worker.execute(query, (patient_id, patient_name))
 
     def update_or_insert_patient_genome_data(self, rsid, patient_id, chromosome, position, genotype):
         query = '''
-            INSERT INTO patient_genome_data (uuid, rsid, patient_id, chromosome, position, genotype)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(rsid) DO UPDATE SET chromosome=excluded.chromosome, position=excluded.position, genotype=excluded.genotype
+            INSERT INTO patient_genome_data (rsid, patient_id, chromosome, position, genotype)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(patient_id, rsid) DO UPDATE SET rsid=excluded.rsid, patient_id=excluded.patient_id, chromosome=excluded.chromosome, position=excluded.position, genotype=excluded.genotype
         '''
-        self.conn.execute(query, (uuid.uuid4(), rsid, patient_id, chromosome, position, genotype))
-        self.conn.commit()
+        self.sql_worker.execute(query, (rsid, patient_id, chromosome, position, genotype))
 
-    def update_patient_and_genome_data(self, patient_id, patient_name, rsid, chromosome, position, genotype):
+    def update_patient_and_genome_data(self, patient_df, patient_id, patient_name):
         self.update_or_insert_patient(patient_id, patient_name)
-        self.update_or_insert_patient_genome_data(rsid, patient_id, chromosome, position, genotype)
+        for index, row in patient_df.iterrows():
+            self.update_or_insert_patient_genome_data(row['rsid'], patient_id, row['chromosome'], row['position'], row['genotype'])
 
     # Read
+
+    def fetch_snp_pairs_data(self):     
+        query = '''
+            SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
+            FROM snp_pairs
+        '''
+        return self.sql_worker.execute(query)
 
     def fetch_joined_patient_data(self):
         query = '''
@@ -78,4 +97,4 @@ class GenomeDatabase(object):
             FROM patients p
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
         '''
-        return self.conn.execute(query).fetchall()
+        return self.sql_worker.execute(query)

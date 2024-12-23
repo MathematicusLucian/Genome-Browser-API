@@ -102,6 +102,26 @@ def test_update_patient_and_genome_data(genome_db):
     assert len(result) == 2
 
 def test_fetch_joined_patient_data(genome_db):
+    genome_db.sql_worker.execute("DELETE FROM snp_pairs;")
+    snp_df = pd.DataFrame({
+        "rsid_genotypes": ["rs1234(A;A)", "rs5678(G;G)"],
+        "magnitude": [1.0, 2.0],
+        "risk": [0.5, 1.5],
+        "notes": ["note1", "note2"],
+        "rsid": ["rs1234", "rs5678"],
+        "allele1": ["A", "G"],
+        "allele2": ["A", "G"]
+    })
+    genome_db.save_snp_pairs_to_db(snp_df) 
+    result = genome_db.fetch_snp_pairs_data()
+    result = fetch_all(result)
+    assert len(result) == 2
+    assert result[0][0] == "rs1234(A;A)"
+    assert result[0][3] == "note1"
+    assert result[0][4] == "rs1234"
+    assert result[1][3] == "note2"
+
+def test_fetch_joined_patient_data(genome_db):
     patient_df = pd.DataFrame({
         "rsid": ["rs1234", "rs5678"],
         "chromosome": ["1", "2"],
@@ -110,10 +130,7 @@ def test_fetch_joined_patient_data(genome_db):
     })
     genome_db.update_patient_and_genome_data(patient_df, "patient1", "John Doe")
     result = genome_db.fetch_joined_patient_data()
-    if isinstance(result, list):
-        result = result
-    else:
-        result = fetch_all(result)
+    result = fetch_all(result)
     assert len(result) == 2
     assert result[0][0] == "patient1"
     assert result[0][1] == "John Doe"

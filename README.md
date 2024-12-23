@@ -3,6 +3,7 @@
 Comparison of ancestry website DNA report with SNPedia data. The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
 
 - A FastAPI (Python) server: provides gene variant data (including patient data combined with SNP pairs data to show health risks.)
+- SQLite: This library implements a thread pool pattern with sqlite3 being the desired output. The library creates a queue to manage multiple queries sent to the database. (sqllite3 implementation lacks the ability to safely modify the sqlite3 database with multiple threads outside of the compile time options.) Instead of directly calling the sqlite3 interface, you will call the Sqlite3Worker which inserts your query into a Queue.Queue() object. The queries are processed in the order that they are inserted into the queue (first in, first out). In order to ensure that the multiple threads are managed in the same queue, you will need to pass the same Sqlite3Worker object to each thread.
 
 ## Run
 

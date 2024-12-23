@@ -11,8 +11,7 @@ snp_pairs_file_name_with_path = os.getenv('SNP_PAIRS_FILE_PATH')
 default_genome_file_name_with_path = os.getenv('GENOME_FILE_PATH')
 
 def setup_genome_browser():
-    genome_database = GenomeDatabase()
-    return GenomeBrowser(snp_pairs_file_name_with_path=snp_pairs_file_name_with_path, genome_database=genome_database)
+    return GenomeBrowser(snp_pairs_file_name_with_path=snp_pairs_file_name_with_path, genome_database=GenomeDatabase())
 
 app = FastAPI()
 # Enable Swagger UI
