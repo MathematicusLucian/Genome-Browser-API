@@ -51,6 +51,8 @@ Test Cases:
 
 `genome_Lilly_Mendel_v4.txt`
 
+[SNPedia: Lily Mendel](https://www.snpedia.com/index.php/User:Lilly_Mendel)
+
 ### SNP Pairs Data
 
 The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
