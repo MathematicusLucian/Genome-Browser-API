@@ -72,7 +72,7 @@ class GenomeBrowser(object):
     
     def fetch_all_snp_pairs(self, **kwargs): 
         column_name = 'rsid'
-        if kwargs.get('offset') is None: kwargs['offset'] = 0
+        if 'offset' not in kwargs: kwargs['offset'] = 0
         kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
         gene_variant_research = self.genome_database.fetch_snp_pairs_data(**kwargs)
         if gene_variant_research is not None:
@@ -90,7 +90,7 @@ class GenomeBrowser(object):
             self.genome_database.update_patient_and_genome_data(self.patient_genome_df, str(uuid.uuid4()), genome_file_name_with_path)
         return self.patient_genome_df.size
 
-    # List of All Patients
+    # Individual Patient Profiles 
 
     def fetch_patients(self):
         patients = self.genome_database.fetch_patients_list(offset=0)
@@ -99,12 +99,23 @@ class GenomeBrowser(object):
         else:
             raise TypeError("No patients - load patient data.")
 
-    # Individual Patient Data
+    def fetch_patient_profiles(self, **kwargs): 
+        column_name = 'rsid'  
+        if 'offset' not in kwargs: kwargs['offset'] = 0
+        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        patients_genome_data_all = self.genome_database.fetch_patient_profile(**kwargs)
+        if patients_genome_data_all is not None:
+            return patients_genome_data_all
+        else:         
+            self._generate_error_message(column_name, kwargs) 
+
+    # Individual Patient Genotypes 
+    
     def fetch_patient_data_genotypes(self, **kwargs): 
         column_name = 'rsid'  
-        if kwargs['offset'] == None: kwargs['offset'] = 0
+        if 'offset' not in kwargs: kwargs['offset'] = 0
         kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
-        patients_genome_data_all = self.genome_database.fetch_patients_genome_data_all(**kwargs)
+        patients_genome_data_all = self.genome_database.fetch_patient_data_genotypes(**kwargs)
         if patients_genome_data_all is not None:
             return patients_genome_data_all
         else:         
@@ -114,7 +125,7 @@ class GenomeBrowser(object):
         
     def fetch_patient_data_expanded(self, **kwargs): 
         column_name = 'rsid'
-        if kwargs['offset'] == None: kwargs['offset'] = 0
+        if 'offset' not in kwargs: kwargs['offset'] = 0
         kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
         gene_variant_patient_details = self.genome_database.fetch_joined_patient_data(**kwargs)
         if gene_variant_patient_details is not None:
@@ -126,7 +137,7 @@ class GenomeBrowser(object):
 
     def fetch_full_report(self, **kwargs): 
         column_name = 'rsid'
-        if kwargs['offset'] is None: kwargs['offset'] = 0
+        if 'offset' not in kwargs: kwargs['offset'] = 0
         kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
         patient_data_as_list = self.genome_database.fetch_joined_patient_data(**kwargs)
         if patient_data_as_list is not None:
