@@ -3,63 +3,115 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 import pytest
 import pandas as pd  
-from unittest.mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 from genomebrowser import GenomeBrowser
-@pytest.fixture
-def genome_browser():
-    gb = GenomeBrowser(None)
-    return gb
 
 # Mock the load_file method to provide the mock dataframe
-@patch.object(GenomeBrowser, 'load_genome', new_callable=pd.DataFrame)
-def test_retrieve_data_by_column_positive(mock_load_genome, genome_browser):
-    mock_load_genome.return_value = None  # Mock the load_file method to do nothing
-    genome_browser.patient_genome_df = pd.DataFrame({
+def test_retrieve_data_by_column_positive():
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
         "rsid": ["rs1050828", "rs1234567"],
         "chromosome": ["1", "2"],
         "position": [12345, 67890],
         "genotype": ["AA", "GG"]
-    })  # Directly set the dataframe 
-    result = genome_browser.retrieve_data_by_column("rsid", "rs1050828")
-    assert not result.empty
-    assert result.iloc[0]["rsid"] == "rs1050828"
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        result = gb.retrieve_data_by_column("rsid", "rs1050828")
+        assert not result.empty
+        assert result.iloc[0]["rsid"] == "rs1050828"
 
 # Positive case: another valid column and key
-@patch.object(GenomeBrowser, 'load_genome', new_callable=pd.DataFrame)
-def test_retrieve_data_by_column_positive_another_key(mock_load_genome, genome_browser):
-    mock_load_genome.return_value = None  # Mock the load_file method to do nothing
-    genome_browser.patient_genome_df = pd.DataFrame({
+def test_retrieve_data_by_column_positive_another_key():
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
         "rsid": ["rs1050828", "rs1234567"],
         "chromosome": ["1", "2"],
         "position": [12345, 67890],
         "genotype": ["AA", "GG"]
-    })  # Directly set the dataframe 
-    result = genome_browser.retrieve_data_by_column("rsid", "rs1234567")
-    assert not result.empty
-    assert result.iloc[0]["rsid"] == "rs1234567"
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        result = gb.retrieve_data_by_column("rsid", "rs1234567")
+        assert not result.empty
+        assert result.iloc[0]["rsid"] == "rs1234567" 
 
-# # Negative case: column not found
-@patch.object(GenomeBrowser, 'load_genome', new_callable=pd.DataFrame)
-def test_retrieve_data_by_column_negative_column_not_found(mock_load_genome, genome_browser):
-    mock_load_genome.return_value = None  # Mock the load_file method to do nothing
-    genome_browser.patient_genome_df = pd.DataFrame({
+# Negative case: column not found
+def test_retrieve_data_by_column_negative_column_not_found():
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
         "rsid": ["rs1050828", "rs1234567"],
         "chromosome": ["1", "2"],
         "position": [12345, 67890],
         "genotype": ["AA", "GG"]
-    })  # Directly set the dataframe 
-    result = genome_browser.retrieve_data_by_column("nonexistent_column", "rs1050828")
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        result = gb.retrieve_data_by_column("nonexistent_column", "rs1050828") 
+        assert result is None
+
+# Negative case: key not found
+def test_retrieve_data_by_column_negative_key_not_found(): 
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
+        "rsid": ["rs1050828", "rs1234567"],
+        "chromosome": ["1", "2"],
+        "position": [12345, 67890],
+        "genotype": ["AA", "GG"]
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        result = gb.retrieve_data_by_column("rsid", "rs9999999") 
+        assert result is None
+
+# Negative case: no genome data loaded
+def test_retrieve_data_by_column_no_genome_data():
+    gb = GenomeBrowser()
+    result = gb.retrieve_data_by_column("rsid", "rs1050828")
     assert result is None
 
-# # Negative case: key not found
-@patch.object(GenomeBrowser, 'load_genome', new_callable=pd.DataFrame)
-def test_retrieve_data_by_column_negative_key_not_found(mock_load_genome, genome_browser):
-    mock_load_genome.return_value = None  # Mock the load_file method to do nothing
-    genome_browser.patient_genome_df = pd.DataFrame({
+# Negative case: invalid column type
+def test_retrieve_data_by_column_invalid_column_type(): 
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
         "rsid": ["rs1050828", "rs1234567"],
         "chromosome": ["1", "2"],
         "position": [12345, 67890],
         "genotype": ["AA", "GG"]
-    })  # Directly set the dataframe 
-    result = genome_browser.retrieve_data_by_column("rsid", "rs9999999")
-    assert result is None
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        with pytest.raises(TypeError):
+            gb.retrieve_data_by_column(123, "rs1050828")
+
+# Positive case: valid fetch_gene_variant
+def test_fetch_gene_variant_positive(): 
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
+        "rsid": ["rs1050828", "rs1234567"],
+        "chromosome": ["1", "2"],
+        "position": [12345, 67890],
+        "genotype": ["AA", "GG"]
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        result = gb.fetch_gene_variant("rs1050828")
+        assert not result.empty
+        assert result.iloc[0]["rsid"] == "rs1050828" 
+
+# Negative case: fetch_gene_variant key not found
+# Exception handling: invalid key type
+def test_fetch_gene_variant_negative_key_not_found(): 
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
+        "rsid": ["rs1050828", "rs1234567"],
+        "chromosome": ["1", "2"],
+        "position": [12345, 67890],
+        "genotype": ["AA", "GG"]
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None)
+        with pytest.raises(TypeError):
+            result = gb.fetch_gene_variant("rs9999999")
+            assert result is None
+
+# Negative case: fetch_gene_variant key not found
+def test_fetch_gene_variant_invalid_key_type(): 
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
+        "rsid": ["rs1050828", "rs1234567"],
+        "chromosome": ["1", "2"],
+        "position": [12345, 67890],
+        "genotype": ["AA", "GG"]
+    })): # Directly set the dataframe
+        gb = GenomeBrowser(None) 
+        with pytest.raises(TypeError):
+            gb.fetch_gene_variant(12345)
