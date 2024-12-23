@@ -44,8 +44,8 @@ def test_retrieve_data_by_column_negative_column_not_found():
         "genotype": ["AA", "GG"]
     })): # Directly set the dataframe
         gb = GenomeBrowser(None)
-        result = gb.retrieve_data_by_column("nonexistent_column", "rs1050828") 
-        assert result is None
+        with pytest.raises(TypeError):
+            gb.retrieve_data_by_column("nonexistent_column", "rs1050828") 
 
 # Negative case: key not found
 def test_retrieve_data_by_column_negative_key_not_found(): 
@@ -61,9 +61,9 @@ def test_retrieve_data_by_column_negative_key_not_found():
 
 # Negative case: no genome data loaded
 def test_retrieve_data_by_column_no_genome_data():
-    gb = GenomeBrowser()
-    result = gb.retrieve_data_by_column("rsid", "rs1050828")
-    assert result is None
+    gb = GenomeBrowser() 
+    with pytest.raises(TypeError):
+        gb.retrieve_data_by_column("rsid", "rs1050828")  
 
 # Negative case: invalid column type
 def test_retrieve_data_by_column_invalid_column_type(): 
@@ -90,8 +90,7 @@ def test_fetch_gene_variant_positive():
         assert not result.empty
         assert result.iloc[0]["rsid"] == "rs1050828" 
 
-# Negative case: fetch_gene_variant key not found
-# Exception handling: invalid key type
+# Negative case: fetch_gene_variant key not found. xception handling: invalid key type
 def test_fetch_gene_variant_negative_key_not_found(): 
     with patch('genomebrowser.GenomeBrowser.patient_genome_df', pd.DataFrame({
         "rsid": ["rs1050828", "rs1234567"],
@@ -101,8 +100,7 @@ def test_fetch_gene_variant_negative_key_not_found():
     })): # Directly set the dataframe
         gb = GenomeBrowser(None)
         with pytest.raises(TypeError):
-            result = gb.fetch_gene_variant("rs9999999")
-            assert result is None
+            gb.fetch_gene_variant("rs9999999")
 
 # Negative case: fetch_gene_variant key not found
 def test_fetch_gene_variant_invalid_key_type(): 
