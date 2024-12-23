@@ -1,5 +1,9 @@
 # Genome Browser
 
+## Run
+
+`python3 main.py`
+
 ## Python Environment (VirtualEnv)
 
 - Create: `python -m venv genomebrowser`
