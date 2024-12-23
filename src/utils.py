@@ -1,6 +1,11 @@
+from venv import logger
 import pandas as pd
+import logging
 
-def load_file(file_name_with_path, sep='\t', comment='#', names=None):
-    df = pd.read_csv(file_name_with_path, low_memory=False, sep=sep, comment=comment, names=names)
-    print(f"Loaded file: {file_name_with_path}, number of rows: {len(df)}")
-    return df
+logging.basicConfig(level=logging.INFO)
+
+def load_file(file_name_with_path, names=None, straight: bool = False):
+    params_list = {'sep': '\t', 'comment': '#', 'names': names}
+    params = None
+    params = {k: v for k, v in params_list.items() if straight is False} 
+    return pd.read_csv(file_name_with_path, low_memory=False, **params) 

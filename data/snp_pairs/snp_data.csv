@@ -1,4 +1,4 @@
-RSID,Magnitude,Risk,Notes
+RSID_Genotypes,Magnitude,Risk,Notes
 I4000307(C;G),4,0,"Cystic Fibrosis carrier"
 I4000307(G;G),0,1,normal
 I4000308(C;C),0,1,normal
