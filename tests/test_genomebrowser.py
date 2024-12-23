@@ -1,5 +1,6 @@
 import os
 import sys
+from venv import logger
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 import pytest
 import pandas as pd  
@@ -163,3 +164,32 @@ def test_fetch_gene_variant_research_key_type():
         gb = GenomeBrowser(None) 
         with pytest.raises(TypeError):
             gb.fetch_gene_variant_research(12345)
+
+# fetch_full_report_by_gene_variant
+
+# Positive case: valid fetch_gene_variant_research
+def test_fetch_full_report_by_gene_variant_positive():     
+    patient_genome_df = pd.DataFrame({
+        "rsid": ["rs1050828", "rs10516809"],
+        "chromosome": ["1", "2"],
+        "position": [12345, 67890],
+        "genotype": ["AA", "GG"]
+    })
+    with patch('genomebrowser.GenomeBrowser.patient_genome_df', patient_genome_df): # Directly set the dataframe
+        snp_pairs_df = pd.DataFrame({
+            "rsid_genotypes": ["Rs1050828(A;A)", "Rs10516809(G;G)"],
+            "magnitude": ["0", "1"],
+            "risk": ["1", "0"],
+            "notes": ["common in clinvar", "common in clinvar"],
+            "rsid": ["rs1050828", "rs10516809"],
+            "allele1": ["A", "G"],
+            "allele2": ["A", "G"]
+        })
+        with patch('genomebrowser.GenomeBrowser.snp_pairs_df', snp_pairs_df): # Directly set the dataframe
+            gb = GenomeBrowser(None) 
+            assert gb.patient_genome_df.size == 8
+            assert gb.snp_pairs_df.size == 14
+            result = gb.fetch_full_report_by_gene_variant("rs10516809")
+            print(result.size)
+            assert not result.empty
+            assert result.iloc[0]["rsid"] == "rs10516809"
