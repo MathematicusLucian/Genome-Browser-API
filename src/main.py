@@ -17,7 +17,13 @@ if __name__ == "__main__":
     #  Add patient data to the genome browser object 
     genome_browser.load_genome(genome_file_name_with_path)
     
-    fetch_gene_variant_patient_details = genome_browser.fetch_gene_variant_patient_details('Rs10516809') 
-    print(f'Patient: {fetch_gene_variant_patient_details}')
-    fetch_gene_variant_research = genome_browser.fetch_gene_variant_research('Rs10516809') 
-    print(f'Research: {fetch_gene_variant_research}')
+    # fetch_gene_variant_patient_details = genome_browser.fetch_gene_variant_patient_details('Rs10516809') 
+    # print(f'Patient: {fetch_gene_variant_patient_details}')
+    # fetch_gene_variant_research = genome_browser.fetch_gene_variant_research('Rs10516809') 
+    # print(f'Research: {fetch_gene_variant_research}')
+    
+    gene_variant = genome_browser.fetch_full_report_by_gene_variant('rs10516809') 
+    print(f'Gene Variant: {gene_variant}')
+
+    # fetch_full_report = genome_browser.fetch_full_report() 
+    # print(f'fetch_full_report: {fetch_full_report}')

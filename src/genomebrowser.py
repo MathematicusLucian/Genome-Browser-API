@@ -67,4 +67,29 @@ class GenomeBrowser(object):
         if gene_variant_research is not None:
             return gene_variant_research
         else:
-            raise TypeError(f"No gene variant found for {column_name} with key '{key_to_find}'.") 
+            raise TypeError(f"No gene variant found for {column_name} with key '{key_to_find}'.")
+    
+    def fetch_full_report_by_gene_variant(self, key_to_find):
+        patient_df = self.fetch_gene_variant_patient_details(key_to_find) 
+        snp_df = self.fetch_gene_variant_research(key_to_find)  
+        full_report_gene_variant_df = pd.merge(patient_df, snp_df, on='rsid', how='inner')
+        snp_pairs_genotype = full_report_gene_variant_df.allele1 + full_report_gene_variant_df.allele2
+        matching_merged_df = full_report_gene_variant_df[(full_report_gene_variant_df['genotype'] == snp_pairs_genotype) | (full_report_gene_variant_df['genotype'].str[::-1] == snp_pairs_genotype)]
+        if matching_merged_df is not None:
+            matching_merged_df.head(5)
+            return matching_merged_df
+        else:
+            raise TypeError(f"No gene variant found for {key_to_find}.")
+
+    def fetch_full_report(self):
+        patient_df = self.snp_pairs_df
+        snp_df = self.patient_genome_df
+        full_report_gene_variant_df = pd.merge(patient_df, snp_df, on='rsid', how='inner')
+        snp_pairs_genotype = full_report_gene_variant_df.allele1 + full_report_gene_variant_df.allele2
+        matching_merged_df = full_report_gene_variant_df[(full_report_gene_variant_df['genotype'] == snp_pairs_genotype) | (full_report_gene_variant_df['genotype'].str[::-1] == snp_pairs_genotype)]
+        pd.set_option('display.max_rows', 1000)
+        if matching_merged_df is not None:
+            matching_merged_df.head(5)
+            return matching_merged_df
+        else:
+            raise TypeError("No gene variants found.")
