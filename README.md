@@ -1,5 +1,7 @@
 # Genome Browser
 
+Comparison of ancestry website DNA report with SNPedia data. The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
+
 ## Run
 
 `python3 src/main.py`
