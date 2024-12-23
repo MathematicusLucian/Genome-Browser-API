@@ -37,50 +37,28 @@ def get_full_report():
     full_report = genome_browser.fetch_patients()
     return {"Patient": full_report}
 
-# Patient SNP Pairs Matches
+# Fetch Patient Data
+
+def fetch_data(fetch_method: Callable, patient_id: Optional[str] = None, variant_id: Optional[str] = None) -> Any:
+    if patient_id and variant_id:
+        return fetch_method(patient_id, variant_id)
+    elif patient_id:
+        return fetch_method(patient_id)
+    else:
+        return fetch_method()
 
 @router.get("/snp_research")
 def get_snp_research(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    if patient_id and variant_id:
-        data = genome_browser.fetch_all_snp_pairs(patient_id, variant_id)
-    elif patient_id:
-        data = genome_browser.fetch_all_snp_pairs(patient_id)
-    else:
-        data = genome_browser.fetch_all_snp_pairs()
-    return data
-
-# Individual Patient Data
+    return fetch_data(genome_browser.fetch_all_snp_pairs, patient_id, variant_id)
 
 @router.get("/patient_genome_data")
 def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    if patient_id and variant_id:
-        data = genome_browser.fetch_patient_data_genotypes(patient_id, variant_id)
-    elif patient_id:
-        data = genome_browser.fetch_patient_data_genotypes(patient_id)
-    else:
-        data = genome_browser.fetch_patient_data_genotypes()
-    return data  
-        
-# Individual Patient Data Expanded (Featuring Their Genotypes)
+    return fetch_data(genome_browser.fetch_patient_data_genotypes, patient_id, variant_id)
 
 @router.get("/patient_genome_data/expanded")
-def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    if patient_id and variant_id:
-        data = genome_browser.fetch_patient_data_expanded(patient_id, variant_id)
-    elif patient_id:
-        data = genome_browser.fetch_patient_data_expanded(patient_id)
-    else:
-        data = genome_browser.fetch_patient_data_expanded()
-    return data   
-
-# Patient Data plus SNP Matches
+def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
+    return fetch_data(genome_browser.fetch_patient_data_expanded, patient_id, variant_id)
 
 @router.get("/full_report")
-def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    if patient_id and variant_id:
-        data = genome_browser.fetch_full_report(patient_id, variant_id)
-    elif patient_id:
-        data = genome_browser.fetch_full_report(patient_id)
-    else:
-        data = genome_browser.fetch_full_report()
-    return data   
+def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
+    return fetch_data(genome_browser.fetch_full_report, patient_id, variant_id)
