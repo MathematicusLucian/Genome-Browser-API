@@ -16,9 +16,25 @@ app = FastAPI()
 app.openapi_url = "/openapi.json"
 app.docs_url = "/docs"
 
+# root
+
 @app.get("/")
-def get_gene_variant():
+def root():
     return {"Genome Browser API": "Welcome to Genome Browser API"}
+
+# /genome
+
+@app.post("/genome/load_patient/{genome_file_name_with_path}")
+def load_genome(genome_file_name_with_path: str):
+    genome_browser.load_genome(genome_file_name_with_path) 
+    return {"Genome Loaded": genome_file_name_with_path}
+
+@app.get("/genome/full_report")
+def get_full_report():
+    full_report = genome_browser.fetch_full_report()
+    return {"Full Report": full_report}
+
+# /genome_variant
 
 @app.get("/gene_variant/full_report/{variant_id}")
 def get_gene_variant(variant_id: str):
@@ -35,17 +51,7 @@ def get_research(variant_id: str):
     research = genome_browser.fetch_gene_variant_research(variant_id)
     return {"Research": research}
 
-@app.get("/genome/full_report")
-def get_full_report():
-    full_report = genome_browser.fetch_full_report()
-    return {"Full Report": full_report}
-
-@app.post("/gene_variant/full_report/{genome_file_name_with_path}")
-def load_genome(genome_file_name_with_path: str):
-    genome_browser.load_genome(genome_file_name_with_path) 
-    return {"Genome Loaded": genome_file_name_with_path}
-
 if __name__ == "__main__":
     app.redoc_url = "/redoc"
     genome_browser = setup()
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
