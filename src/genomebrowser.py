@@ -41,6 +41,7 @@ class GenomeBrowser(object):
 
     def load_genome(self, genome_file_name_with_path):
         self.patient_genome_df = load_data(genome_file_name_with_path, names=["rsid","chromosome","position","genotype"])
+        return self.patient_genome_df.size
 
     def retrieve_data_by_column(self, df, column_name, key_to_find):
         if df is not None:

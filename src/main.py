@@ -6,7 +6,7 @@ from genomebrowser import GenomeBrowser
 
 load_dotenv()
 snp_pairs_file_name_with_path = os.getenv('SNP_PAIRS_FILE_PATH')
-genome_file_name_with_path = os.getenv('GENOME_FILE_PATH')
+default_genome_file_name_with_path = os.getenv('GENOME_FILE_PATH')
 
 def setup():
     return GenomeBrowser(snp_pairs_file_name_with_path)
@@ -15,6 +15,7 @@ app = FastAPI()
 # Enable Swagger UI
 app.openapi_url = "/openapi.json"
 app.docs_url = "/docs"
+genome_browser = setup()
 
 # root
 
@@ -26,8 +27,11 @@ def root():
 
 @app.post("/genome/load_patient/{genome_file_name_with_path}")
 def load_genome(genome_file_name_with_path: str):
+    if(genome_file_name_with_path == "default"):
+        genome_file_name_with_path = default_genome_file_name_with_path
     genome_browser.load_genome(genome_file_name_with_path) 
-    return {"Genome Loaded": genome_file_name_with_path}
+    return {"Genome Loaded": genome_file_name_with_path,
+            "Number of Rows": genome_browser.patient_genome_df.size}
 
 @app.get("/genome/full_report")
 def get_full_report():
@@ -53,5 +57,4 @@ def get_research(variant_id: str):
 
 if __name__ == "__main__":
     app.redoc_url = "/redoc"
-    genome_browser = setup()
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

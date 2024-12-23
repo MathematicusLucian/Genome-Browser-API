@@ -20,6 +20,13 @@ Comparison of ancestry website DNA report with SNPedia data. The major/minor all
 
 In your browser, open `http://127.0.0.1:8000/`
 
+**Load a Patient Genome**
+
+- `/genome/load_patient/{genome_file_name_with_path}`
+- If you provide the string `default` for `genome_file_name_with_path`, it will load the default patient data (`genome_Lilly_Mendel_v4.txt`.)
+
+![Endpoint: `load_patient`](./assets/endpoint_load_patient.png)
+
 ### Swagger
 
 `http://127.0.0.1:8000/docs`
