@@ -43,7 +43,7 @@ class GenomeDatabase(object):
     def close_connection(self):
         self.sql_worker.close()
 
-    # Write/Create/Update
+    # WRITE (Create/Update/Insert)
 
     # SNP Pairs
 
@@ -82,19 +82,181 @@ class GenomeDatabase(object):
         for index, row in patient_df.iterrows():
             self.update_or_insert_patient_genome_data(row['rsid'], patient_id, row['chromosome'], row['position'], row['genotype'])
 
-    # Read
+    # READ (Fetch/Select)
 
-    def fetch_snp_pairs_data(self):     
+    # Patient SNP Pairs Matches
+    
+    # SNP Pairs data 
+    
+    def fetch_snp_pairs_data(self, offset=0): 
         query = '''
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
             FROM snp_pairs
+            LIMIT 25 OFFSET ?
         '''
-        return self.sql_worker.execute(query)
+        return self.sql_worker.execute(query, (offset,))
 
-    def fetch_joined_patient_data(self):
+    def fetch_snp_pairs_data(self, patient_id: str, offset=0):     
+        query = '''
+            SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
+            FROM snp_pairs
+            WHERE patient_id = ? 
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, offset,))
+
+    def fetch_snp_pairs_data(self, patient_id: str, variant_id: str, offset=0): 
+        query = '''
+            SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
+            FROM snp_pairs
+            WHERE patient_id = ? AND rsid = ? 
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, variant_id, offset,))
+
+    # List of All Patients
+
+    def fetch_patients_list(self, offset=0):
+        query = '''
+            SELECT rsid, patient_id, chromosome, position, genotype
+            FROM patients
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (offset,))
+
+    # Individual Patient Profiles
+
+    def fetch_patient_profile(self, offset=0): 
+        query = '''
+            SELECT *
+            FROM patients
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (offset,))
+
+    def fetch_patient_profile(self, patient_id: str, offset=0): 
+        query = '''
+            SELECT *
+            FROM patients
+            WHERE patient_id = ?
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, offset,))
+
+    def fetch_patient_profile(self, patient_id: str, variant_id: str, offset=0): 
+        query = '''
+            SELECT *
+            FROM patients
+            WHERE patient_id = ? AND rsid = ? 
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, variant_id, offset,))
+
+    # Individual Patient Genotype Datasets
+
+    def fetch_patient_data_genotypes(self, offset=0): 
+        query = '''
+            SELECT *
+            FROM patient_genome_data
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (offset,))
+
+    def fetch_patient_data_genotypes(self, patient_id: str, offset=0): 
+        query = '''
+            SELECT *
+            FROM patient_genome_data
+            WHERE patient_id = ? 
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, offset,))
+
+    def fetch_patient_data_genotypes(self, patient_id: str, variant_id: str, offset=0): 
+        query = '''
+            SELECT *
+            FROM patient_genome_data
+            WHERE patient_id = ? AND rsid = ? 
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, variant_id, offset,))
+
+    # Individual Patient Data by Genotype
+
+    def fetch_snp_pairs_data_by_genotype(self, patient_id, rsid, allele1, allele2, offset=0):     
+        query = '''
+            SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
+            FROM snp_pairs
+            WHERE patient_id = ? AND rsid = ? AND allele1 = ? AND allele2 = ?
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, rsid, allele1, allele2, offset,))
+        
+    # Individual Patient Data Expanded (Featuring Their Genotypes)
+    
+    def fetch_joined_patient_data(self, offset=0): 
         query = '''
             SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype
             FROM patients p
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
+            LIMIT 25 OFFSET ?
         '''
-        return self.sql_worker.execute(query)
+        return self.sql_worker.execute(query, (offset,))
+    
+    def fetch_joined_patient_data(self, patient_id: str, offset=0): 
+        query = '''
+            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype
+            FROM patients p
+            JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
+            WHERE pgd.patient_id = ?
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, offset,))
+    
+    def fetch_joined_patient_data(self, patient_id: str, variant_id: str, offset=0): 
+        query = '''
+            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype
+            FROM patients p
+            JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
+            WHERE pgd.patient_id = ? AND pgd.rsid = ?
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, variant_id, offset,))
+
+    # Patient Data plus SNP Matches
+
+    def fetch_joined_patient_data(self, offset=0): 
+        query = '''
+            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
+               sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2
+               (pgd.genotype = sp.allele1 || sp.allele2 OR pgd.genotype = sp.allele2 || sp.allele1) AS genotype_match
+            FROM patients p
+            JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
+            JOIN snp_pairs sp ON pgd.rsid = sp.rsid 
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (offset,))
+
+    def fetch_joined_patient_data(self, patient_id: str, offset=0): 
+        query = '''
+            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
+               sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2
+               (pgd.genotype = sp.allele1 || sp.allele2 OR pgd.genotype = sp.allele2 || sp.allele1) AS genotype_match
+            FROM patients p
+            JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
+            JOIN snp_pairs sp ON pgd.rsid = sp.rsid 
+            WHERE pgd.patient_id = ?
+            LIMIT 25 OFFSET ?
+        '''
+        return self.sql_worker.execute(query, (patient_id, offset,))
+
+    def fetch_joined_patient_data(self, patient_id: str, variant_id: str, offset=0): 
+        query = '''
+            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
+               sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2,
+               (pgd.genotype = sp.allele1 || sp.allele2 OR pgd.genotype = sp.allele2 || sp.allele1) AS genotype_match
+            FROM patients p
+            JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
+            JOIN snp_pairs sp ON pgd.rsid = sp.rsid
+            WHERE pgd.patient_id = ? AND pgd.rsid = ? 
+        '''
+        return self.sql_worker.execute(query, (patient_id, variant_id, offset,))
