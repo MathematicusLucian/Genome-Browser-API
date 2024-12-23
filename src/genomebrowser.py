@@ -16,18 +16,28 @@ class GenomeBrowser(object):
     patient_genome_df = pd.DataFrame() | None
     snp_pairs_df = pd.DataFrame() | None
     genome_database = genomedatabase.GenomeDatabase()  
+    default_genome_file_name_with_path = None
 
-    def __init__(self, snp_pairs_file_name_with_path=None, genome_database=None):
+    def __init__(self, snp_pairs_file_name_with_path=None, default_genome_file_name_with_path=None, genome_database=None):
         self.genome_database = genome_database
         self.genome_database.create_tables()
+        self.default_genome_file_name_with_path = default_genome_file_name_with_path
         if snp_pairs_file_name_with_path is not None:
             self.load_snp_pairs_df(snp_pairs_file_name_with_path)
  
-    def extract_genotype_info(self, df):
+    def _extract_genotype_info(self, df):
         df['RSID'] = df['RSID_Genotypes'].str.extract(r'(Rs\d+)\(')
         df['Allele1'] = df['RSID_Genotypes'].str.extract(r'\(([^;]+)')
         df['Allele2'] = df['RSID_Genotypes'].str.extract(r';([^)]+)\)')
         return df
+
+    def _generate_error_message(self, column_name, kwargs):
+        error_message = f"No data found for {column_name}."
+        if 'rsid' in kwargs:
+            error_message += f" with key '{kwargs['rsid']}'."
+        if 'patient_id' in kwargs:
+            error_message += f" for patient_id '{kwargs['patient_id']}'."
+            raise TypeError(error_message)
 
     def retrieve_data_by_column(self, df, column_name, key_to_find):
         if df is not None:
@@ -50,7 +60,7 @@ class GenomeBrowser(object):
         pattern = 'Rs'
         mask = snp_df['RSID_Genotypes'].str.startswith(pattern)
         snp_df = snp_df[mask]
-        snp_df = self.extract_genotype_info(snp_df)
+        snp_df = self._extract_genotype_info(snp_df)
         new_cols = ['rsid_genotypes', 'magnitude', 'risk', 'notes', 'rsid', 'allele1', 'allele2']
         snp_df.columns = new_cols
         snp_df[index_column_name] = snp_df[index_column_name].map(lambda x : x.lower())
@@ -60,36 +70,21 @@ class GenomeBrowser(object):
         else:
             raise TypeError("No SNP data loaded.")
     
-    def fetch_all_snp_pairs(self): 
+    def fetch_all_snp_pairs(self, **kwargs): 
         column_name = 'rsid'
-        gene_variant_research = self.genome_database.fetch_snp_pairs_data(offset=0) 
+        if kwargs.get('offset') is None: kwargs['offset'] = 0
+        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        gene_variant_research = self.genome_database.fetch_snp_pairs_data(**kwargs)
         if gene_variant_research is not None:
             return gene_variant_research
         else:
-            raise TypeError(f"No gene variant found for {column_name}.")
-
-
-    def fetch_all_snp_pairs(self, patient_id: str): 
-        column_name = 'rsid'
-        gene_variant_research = self.genome_database.fetch_snp_pairs_data(patient_id, offset=0) 
-        if gene_variant_research is not None:
-            return gene_variant_research
-        else:
-            raise TypeError(f"No gene variant found for {column_name}.")
-
-
-    def fetch_all_snp_pairs(self, patient_id: str, variant_id: str): 
-        column_name = 'rsid'
-        rsid = check_if_default(variant_id)
-        gene_variant_research = self.genome_database.fetch_snp_pairs_data(patient_id, rsid, offset=0) 
-        if gene_variant_research is not None:
-            return gene_variant_research
-        else:
-            raise TypeError(f"No gene variant found for {column_name} with key '{rsid}'.")
+            self._generate_error_message(column_name, kwargs)
         
     # Patient Genome: /patient 
 
     def load_genome(self, genome_file_name_with_path: str):
+        if(genome_file_name_with_path == "default"):
+            genome_file_name_with_path = self.default_genome_file_name_with_path
         self.patient_genome_df = load_data(genome_file_name_with_path, names=["rsid", "chromosome", "position", "genotype"])
         if self.patient_genome_df is not None and self.genome_database is not None:
             self.genome_database.update_patient_and_genome_data(self.patient_genome_df, str(uuid.uuid4()), genome_file_name_with_path)
@@ -105,82 +100,36 @@ class GenomeBrowser(object):
             raise TypeError("No patients - load patient data.")
 
     # Individual Patient Data
-
-    def fetch_patient_data_genotypes(self): 
-        column_name = 'rsid'
-        patients_genome_data_all = self.genome_database.fetch_patients_genome_data_all(offset=0)
+    def fetch_patient_data_genotypes(self, **kwargs): 
+        column_name = 'rsid'  
+        if kwargs['offset'] == None: kwargs['offset'] = 0
+        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        patients_genome_data_all = self.genome_database.fetch_patients_genome_data_all(**kwargs)
         if patients_genome_data_all is not None:
             return patients_genome_data_all
-        else:
-            raise TypeError(f"No fetch_patient_data_genotypes found for {column_name}.")
-
-
-    def fetch_patient_data_genotypes(self, patient_id: str): 
-        column_name = 'rsid'
-        patients_genome_data_all = self.genome_database.fetch_patients_genome_data_all(patient_id, offset=0)
-        if patients_genome_data_all is not None:
-            return patients_genome_data_all
-        else:
-            raise TypeError(f"No fetch_patient_data_genotypes found for {column_name}.")
-
-
-    def fetch_patient_data_genotypes(self, patient_id: str, variant_id: str): 
-        column_name = 'rsid'
-        rsid = check_if_default(variant_id)
-        patients_genome_data_all = self.genome_database.fetch_patients_genome_data_all(patient_id, rsid, offset=0)
-        if patients_genome_data_all is not None:
-            return patients_genome_data_all
-        else:
-            raise TypeError(f"No fetch_patient_data_genotypes found for {column_name} with key '{rsid}'.")
+        else:         
+            self._generate_error_message(column_name, kwargs) 
         
-    # Individual Patient Data Expanded (Featuring Their Genotypes)
-    
-    def fetch_patient_data_expanded(self): 
-        gene_variant_patient_details = self.genome_database.fetch_joined_patient_data(offset=0) 
-        if gene_variant_patient_details is not None:
-            return gene_variant_patient_details
-        else:
-            raise TypeError("No patients data found.")
-    
-    def fetch_patient_data_expanded(self, patient_id: str): 
-        column_name = 'rsid' 
-        gene_variant_patient_details = self.genome_database.fetch_joined_patient_data_by_rsid(patient_id, offset=0) 
-        if gene_variant_patient_details is not None:
-            return gene_variant_patient_details
-        else:
-            raise TypeError(f"No patients data found for {column_name} with patient_id '{patient_id}'.")
-    
-    def fetch_patient_data_expanded(self, patient_id: str, variant_id: str): 
+    # Individual Patient Data Expanded (Featuring Their Genotypes) 
+        
+    def fetch_patient_data_expanded(self, **kwargs): 
         column_name = 'rsid'
-        rsid = check_if_default(variant_id)
-        gene_variant_patient_details = self.genome_database.fetch_joined_patient_data_by_rsid(patient_id, rsid, offset=0) 
+        if kwargs['offset'] == None: kwargs['offset'] = 0
+        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        gene_variant_patient_details = self.genome_database.fetch_joined_patient_data(**kwargs)
         if gene_variant_patient_details is not None:
             return gene_variant_patient_details
         else:
-            raise TypeError(f"No patients data found for {column_name} with key '{rsid}'.")
+            self._generate_error_message(column_name, kwargs) 
 
     # Patient Data plus SNP Matches
 
-    def fetch_full_report(self): 
-        patient_data_as_list = self.genome_database.fetch_joined_patient_data(offset=0)
-        if patient_data_as_list is not None:
-            return patient_data_as_list
-        else:
-            raise TypeError("No data found.")
-
-    def fetch_full_report(self, patient_id: str): 
-        patient_data_as_list = self.genome_database.fetch_joined_patient_data(patient_id, offset=0)
-        if patient_data_as_list is not None:
-            return patient_data_as_list
-        else:
-            raise TypeError("No data found.")
-
-
-    def fetch_full_report(self, patient_id: str, variant_id: str): 
+    def fetch_full_report(self, **kwargs): 
         column_name = 'rsid'
-        rsid = check_if_default(variant_id)  
-        patient_data_as_list = self.genome_database.fetch_joined_patient_data(patient_id, rsid, offset=0) 
+        if kwargs['offset'] is None: kwargs['offset'] = 0
+        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        patient_data_as_list = self.genome_database.fetch_joined_patient_data(**kwargs)
         if patient_data_as_list is not None:
             return patient_data_as_list
         else:
-            raise TypeError(f"No patients data found for {column_name} with key '{rsid}'.")
+            self._generate_error_message(column_name, kwargs) 
