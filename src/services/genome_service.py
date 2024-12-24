@@ -32,6 +32,25 @@ class GenomeService:
         snp_pairs_file_name_with_path=os.getenv('SNP_PAIRS_FILE_PATH')
         self.snp_pairs_df = self.load_snp_pairs_df(snp_pairs_file_name_with_path)
  
+    def _generate_error_message(self, column_name, kwargs):
+        error_message = f"No data found for {column_name}."
+        if 'rsid' in kwargs:
+            error_message += f" with key '{kwargs['rsid']}'."
+        if 'patient_id' in kwargs:
+            error_message += f" for patient_id '{kwargs['patient_id']}'."
+            raise TypeError(error_message)
+
+    def retrieve_data_by_column(self, df, column_name, key_to_find):
+        if df is not None:
+            if column_name in df.columns:
+                data = df.loc[df[column_name] == key_to_find] 
+                if not data.empty:
+                    return data
+            else:
+                raise TypeError(f"No data found for {key_to_find} in column {column_name}.")
+        else:
+            raise TypeError(f"No {key_to_find} data loaded.")
+        
     def load_genome_background(self, genome_file_name_with_path: Optional[str] = None):
         if genome_file_name_with_path is None: genome_file_name_with_path = "default"
         loop = asyncio.new_event_loop()
@@ -41,6 +60,8 @@ class GenomeService:
         notification_service = NotificationService()
         loop.run_until_complete(notification_service.notify_ui(genome_file_name_with_path, self.genome_browser.patient_genome_df.size))
         loop.close() 
+
+    # Genome Data from Published Literature
 
     def fetch_chromosomes_from_ensembl(self):
         server = "https://grch37.rest.ensembl.org"
@@ -69,27 +90,6 @@ class GenomeService:
         df['Allele1'] = df['RSID_Genotypes'].str.extract(r'\(([^;]+)')
         df['Allele2'] = df['RSID_Genotypes'].str.extract(r';([^)]+)\)')
         return df
-
-    def _generate_error_message(self, column_name, kwargs):
-        error_message = f"No data found for {column_name}."
-        if 'rsid' in kwargs:
-            error_message += f" with key '{kwargs['rsid']}'."
-        if 'patient_id' in kwargs:
-            error_message += f" for patient_id '{kwargs['patient_id']}'."
-            raise TypeError(error_message)
-
-    def retrieve_data_by_column(self, df, column_name, key_to_find):
-        if df is not None:
-            if column_name in df.columns:
-                data = df.loc[df[column_name] == key_to_find] 
-                if not data.empty:
-                    return data
-            else:
-                raise TypeError(f"No data found for {key_to_find} in column {column_name}.")
-        else:
-            raise TypeError(f"No {key_to_find} data loaded.")
-
-    # Patient SNP Pairs Matches
     
     # SNP Pairs data
 
