@@ -41,8 +41,8 @@ default_genome_file_name_with_path = os.getenv('GENOME_FILE_PATH')
 websocket_url = "ws://localhost:8000/ws"
 
 async def notify_ui(genome_file_name_with_path: str):
-    async with WebSocket(websocket_url) as websocket:
-        await websocket.send_json({"event": "genome_loaded", "genome_file_name_with_path": genome_file_name_with_path, "Number of Rows": genome_browser.patient_genome_df.size}) 
+    async with WebSocket(websocket_url, headers=None, subprotocols=None) as websocket:
+        await websocket.send_json({"event": "genome_loaded", "genome_file_name_with_path": genome_file_name_with_path, "Number of Rows": genome_browser.patient_genome_df.size})
 
 def load_genome_background(genome_file_name_with_path: Optional[str] = None):
     if genome_file_name_with_path is None: genome_file_name_with_path = "default"
@@ -98,26 +98,26 @@ def get_full_report():
 
 # Fetch Patient Data
 
-def fetch_data(fetch_method: Callable, patient_id: Optional[str] = None, variant_id: Optional[str] = None) -> Any:
-    if patient_id and variant_id:
-        return fetch_method(patient_id, variant_id)
-    elif patient_id:
-        return fetch_method(patient_id)
-    else:
-        return fetch_method()
+def fetch_data(fetch_method: Callable, **kwargs) -> Any:
+    filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None and v != ""}
+    return fetch_method(**filtered_kwargs)
 
 @router.get("/snp_research")
-def get_snp_research(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, patient_id, variant_id))
+def get_snp_research(variant_id: Optional[str] = None):
+    return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, variant_id=variant_id))
+
+@router.get("/patient_profile")
+def get_patient_genome_data(patient_id: Optional[str] = None):
+    return JSONResponse(content=fetch_data(fetch_method=genome_browser.fetch_patient_profile, patient_id=patient_id))
 
 @router.get("/patient_genome_data")
 def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    return JSONResponse(content=fetch_data(genome_browser.fetch_patient_data_genotypes, patient_id, variant_id))
+    return JSONResponse(content=fetch_data(fetch_method=genome_browser.fetch_patient_genome_data, patient_id=patient_id, variant_id=variant_id))
 
 @router.get("/patient_genome_data/expanded")
 def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    return JSONResponse(content=fetch_data(genome_browser.fetch_patient_data_expanded, patient_id, variant_id))
+    return JSONResponse(content=fetch_data(genome_browser.fetch_patient_data_expanded, patient_id=patient_id, variant_id=variant_id))
 
 @router.get("/full_report")
 def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
-    return JSONResponse(content=fetch_data(genome_browser.fetch_full_report, patient_id, variant_id))
+    return JSONResponse(content=fetch_data(genome_browser.fetch_full_report, patient_id=patient_id, variant_id=variant_id))

@@ -1,4 +1,8 @@
+import itertools
+import json
+import pandas as pd
 from sqlite3worker import Sqlite3Worker
+from sqlalchemy import JSON, cast
 
 class GenomeDatabase(object):
     __db_path = None
@@ -89,15 +93,15 @@ class GenomeDatabase(object):
     # SNP Pairs data 
     
     def fetch_snp_pairs_data(self, offset=0, **kwargs): 
+        columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
+        columns = self.sql_worker.execute(columns_query)
+        columns = list(itertools.chain.from_iterable(columns))
         base_query = '''
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
             FROM snp_pairs
         '''
         conditions = []
         params = []
-        if 'patient_id' in kwargs:
-            conditions.append('patient_id = ?')
-            params.append(kwargs['patient_id'])
         if 'variant_id' in kwargs:
             conditions.append('rsid = ?')
             params.append(kwargs['variant_id'])
@@ -105,7 +109,10 @@ class GenomeDatabase(object):
             base_query += ' WHERE ' + ' AND '.join(conditions)
         base_query += ' LIMIT 25 OFFSET ?'
         params.append(offset)
-        return self.sql_worker.execute(base_query, tuple(params))
+        results_list = self.sql_worker.execute(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns) 
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str)
 
     # List of All Patients
 
@@ -120,9 +127,37 @@ class GenomeDatabase(object):
     # Individual Patient Profiles
 
     def fetch_patient_profile(self, offset=0, **kwargs):
+        columns_query = '''SELECT name FROM pragma_table_info('patients')'''
+        columns = self.sql_worker.execute(columns_query)
+        columns = list(itertools.chain.from_iterable(columns))
         base_query = '''
             SELECT *
             FROM patients
+        '''
+        conditions = []
+        params = []
+        if 'patient_id' in kwargs:
+            conditions.append('patient_id = ?')
+            params.append(kwargs['patient_id'])
+        if conditions:
+            base_query += ' WHERE ' + ' AND '.join(conditions)
+        base_query += ' LIMIT 25 OFFSET ?'
+        params.append(offset)
+        results_list = self.sql_worker.execute(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns) 
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str)
+    
+    # Individual Patient Genotype Datasets
+    
+    def fetch_patient_genome_data(self, offset=0, **kwargs): 
+        columns_query = '''SELECT name FROM pragma_table_info('patient_genome_data')'''
+        columns = self.sql_worker.execute(columns_query)
+        columns = list(itertools.chain.from_iterable(columns))
+        columns.remove("patient_id")
+        base_query = '''
+            SELECT rsid, chromosome, position, genotype
+            FROM patient_genome_data
         '''
         conditions = []
         params = []
@@ -136,57 +171,10 @@ class GenomeDatabase(object):
             base_query += ' WHERE ' + ' AND '.join(conditions)
         base_query += ' LIMIT 25 OFFSET ?'
         params.append(offset)
-        return self.sql_worker.execute(base_query, tuple(params))
-    
-    # Individual Patient Genotype Datasets
-    
-    def fetch_patient_data_genotypes(self, offset=0, **kwargs):
-        # base_query = '''SELECT DISTINCT m.name || '.' || ii.name AS 'indexed-columns'
-        #     FROM sqlite_schema AS m,
-        #         pragma_index_list(m.name) AS il,
-        #         pragma_index_info(il.name) AS ii
-        #     WHERE m.type='table'
-        #     ORDER BY 1
-        # '''
-        base_query = '''
-            SELECT * 
-            FROM patient_genome_data
-        '''
-        # SELECT * FROM pragma_index_info('patient_genome_data')
-        # PRAGMA index_info('patient_genome_data')
-
-        # conditions = []
-        # params = []
-        # if 'patient_id' in kwargs:
-        #     conditions.append('patient_id = ?')
-        #     params.append(kwargs['patient_id'])
-        # if 'variant_id' in kwargs:
-        #     conditions.append('rsid = ?')
-        #     params.append(kwargs['variant_id'])
-        # if conditions:
-        #     base_query += ' WHERE ' + ' AND '.join(conditions)
-        # base_query += ' LIMIT 25 OFFSET ?'
-        # params.append(offset)
-        
-        # Execute the query and fetch the results
-        # result = self.sql_worker.execute(base_query, tuple(params))
-        result = self.sql_worker.execute(base_query)
-        return result
-    
-    # def fetch_patient_genome_data_columns(self):
-    #     query = 'PRAGMA table_info(patient_genome_data)'
-    #     columns_info = self.sql_worker.execute(query)
-    #     columns = [col[1] for col in columns_info]
-    #     return columns
-        
-        # # Retrieve column names from the table schema
-        # column_query = 'PRAGMA table_info(patient_genome_data)'
-        # columns_info = self.sql_worker.execute(column_query)
-        # columns = [col[1] for col in columns_info]
-        
-        # # Combine column names with the result data
-        # data = [dict(zip(columns, row)) for row in result]
-        # return data
+        results_list = self.sql_worker.execute(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns) 
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str)
         
     # Individual Patient Data by Genotype
 
@@ -201,7 +189,9 @@ class GenomeDatabase(object):
         
     # Individual Patient Data Expanded (Featuring Their Genotypes)
     
-    def fetch_joined_patient_data(self, offset=0, **kwargs):
+    def fetch_patient_data_expanded(self, offset=0, **kwargs): 
+        columns = ['patient_id', 'patient_name', 'rsid', 'chromosome', 'position', 'genotype',
+               'rsid_genotypes', 'magnitude', 'risk', 'notes', 'allele1', 'allele2', 'genotype_match']
         base_query = '''
             SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
                    sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2,
@@ -222,14 +212,16 @@ class GenomeDatabase(object):
             base_query += ' WHERE ' + ' AND '.join(conditions)
         base_query += ' LIMIT 25 OFFSET ?'
         params.append(offset)
-        result = self.sql_worker.execute(base_query, tuple(params))
-        columns = [desc[0] for desc in self.sql_worker.cursor.description]
-        data = [dict(zip(columns, row)) for row in result]
-        return data
+        results_list = self.sql_worker.execute(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns) 
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str)
     
     # Patient Data plus SNP Matches
  
-    def fetch_joined_patient_data(self, offset=0, **kwargs):
+    def fetch_full_report(self, offset=0, **kwargs):
+        columns = ['patient_id', 'patient_name', 'rsid', 'chromosome', 'position', 'genotype',
+               'rsid_genotypes', 'magnitude', 'risk', 'notes', 'allele1', 'allele2', 'genotype_match']
         base_query = '''
             SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
                    sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2,
@@ -250,4 +242,7 @@ class GenomeDatabase(object):
             base_query += ' WHERE ' + ' AND '.join(conditions)
         base_query += ' LIMIT 25 OFFSET ?'
         params.append(offset)
-        return self.sql_worker.execute(base_query, tuple(params))
+        results_list = self.sql_worker.execute(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns) 
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str)
