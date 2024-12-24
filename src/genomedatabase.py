@@ -88,6 +88,24 @@ class GenomeDatabase(object):
 
     # READ (Fetch/Select)
 
+    def _fetch_data_with_conditions(self, base_query, columns, offset, **kwargs):
+        conditions = []
+        params = []
+        if 'patient_id' in kwargs:
+            conditions.append('pgd.patient_id = ?')
+            params.append(kwargs['patient_id'])
+        if 'variant_id' in kwargs:
+            conditions.append('pgd.rsid = ?')
+            params.append(kwargs['variant_id'])
+        if conditions:
+            base_query += ' WHERE ' + ' AND '.join(conditions)
+        base_query += ' LIMIT 25 OFFSET ?'
+        params.append(offset)
+        results_list = self.sql_worker.execute(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns)
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str)
+
     # Patient SNP Pairs Matches
     
     # SNP Pairs data 
@@ -100,19 +118,7 @@ class GenomeDatabase(object):
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
             FROM snp_pairs
         '''
-        conditions = []
-        params = []
-        if 'variant_id' in kwargs:
-            conditions.append('rsid = ?')
-            params.append(kwargs['variant_id'])
-        if conditions:
-            base_query += ' WHERE ' + ' AND '.join(conditions)
-        base_query += ' LIMIT 25 OFFSET ?'
-        params.append(offset)
-        results_list = self.sql_worker.execute(base_query, tuple(params))
-        results_list = pd.DataFrame(results_list, columns=columns) 
-        json_str = results_list.to_json(orient='records', date_format='iso')
-        return json.loads(json_str)
+        return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
 
     # List of All Patients
 
@@ -134,19 +140,7 @@ class GenomeDatabase(object):
             SELECT *
             FROM patients
         '''
-        conditions = []
-        params = []
-        if 'patient_id' in kwargs:
-            conditions.append('patient_id = ?')
-            params.append(kwargs['patient_id'])
-        if conditions:
-            base_query += ' WHERE ' + ' AND '.join(conditions)
-        base_query += ' LIMIT 25 OFFSET ?'
-        params.append(offset)
-        results_list = self.sql_worker.execute(base_query, tuple(params))
-        results_list = pd.DataFrame(results_list, columns=columns) 
-        json_str = results_list.to_json(orient='records', date_format='iso')
-        return json.loads(json_str)
+        return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
     
     # Individual Patient Genotype Datasets
     
@@ -159,22 +153,7 @@ class GenomeDatabase(object):
             SELECT rsid, chromosome, position, genotype
             FROM patient_genome_data
         '''
-        conditions = []
-        params = []
-        if 'patient_id' in kwargs:
-            conditions.append('patient_id = ?')
-            params.append(kwargs['patient_id'])
-        if 'variant_id' in kwargs:
-            conditions.append('rsid = ?')
-            params.append(kwargs['variant_id'])
-        if conditions:
-            base_query += ' WHERE ' + ' AND '.join(conditions)
-        base_query += ' LIMIT 25 OFFSET ?'
-        params.append(offset)
-        results_list = self.sql_worker.execute(base_query, tuple(params))
-        results_list = pd.DataFrame(results_list, columns=columns) 
-        json_str = results_list.to_json(orient='records', date_format='iso')
-        return json.loads(json_str)
+        return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
         
     # Individual Patient Data by Genotype
 
@@ -200,22 +179,7 @@ class GenomeDatabase(object):
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
             JOIN snp_pairs sp ON pgd.rsid = sp.rsid
         '''
-        conditions = []
-        params = []
-        if 'patient_id' in kwargs:
-            conditions.append('pgd.patient_id = ?')
-            params.append(kwargs['patient_id'])
-        if 'variant_id' in kwargs:
-            conditions.append('pgd.rsid = ?')
-            params.append(kwargs['variant_id'])
-        if conditions:
-            base_query += ' WHERE ' + ' AND '.join(conditions)
-        base_query += ' LIMIT 25 OFFSET ?'
-        params.append(offset)
-        results_list = self.sql_worker.execute(base_query, tuple(params))
-        results_list = pd.DataFrame(results_list, columns=columns) 
-        json_str = results_list.to_json(orient='records', date_format='iso')
-        return json.loads(json_str)
+        return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
     
     # Patient Data plus SNP Matches
  
@@ -230,19 +194,4 @@ class GenomeDatabase(object):
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
             JOIN snp_pairs sp ON pgd.rsid = sp.rsid
         '''
-        conditions = []
-        params = []
-        if 'patient_id' in kwargs:
-            conditions.append('pgd.patient_id = ?')
-            params.append(kwargs['patient_id'])
-        if 'variant_id' in kwargs:
-            conditions.append('pgd.rsid = ?')
-            params.append(kwargs['variant_id'])
-        if conditions:
-            base_query += ' WHERE ' + ' AND '.join(conditions)
-        base_query += ' LIMIT 25 OFFSET ?'
-        params.append(offset)
-        results_list = self.sql_worker.execute(base_query, tuple(params))
-        results_list = pd.DataFrame(results_list, columns=columns) 
-        json_str = results_list.to_json(orient='records', date_format='iso')
-        return json.loads(json_str)
+        return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
