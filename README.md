@@ -2,7 +2,7 @@
 
 Comparison of ancestry website DNA report with SNPedia data. The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
 
-- A FastAPI (Python) server: provides gene variant data (including patient data combined with SNP pairs data to show health risks.)
+- A FastAPI (Python) server (with Uvicorn): provides gene variant data (including patient data combined with SNP pairs data to show health risks.)
 - SQLite: This library implements a thread pool pattern with sqlite3 being the desired output. The library creates a queue to manage multiple queries sent to the database. (sqllite3 implementation lacks the ability to safely modify the sqlite3 database with multiple threads outside of the compile time options.) Instead of directly calling the sqlite3 interface, you will call the Sqlite3Worker which inserts your query into a Queue.Queue() object. The queries are processed in the order that they are inserted into the queue (first in, first out). In order to ensure that the multiple threads are managed in the same queue, you will need to pass the same Sqlite3Worker object to each thread.
 
 ## Run
@@ -21,16 +21,35 @@ Comparison of ancestry website DNA report with SNPedia data. The major/minor all
 
 In your browser, open `http://127.0.0.1:8000/`
 
+## Endpoints
+
+![Endpoint: `load_patient`](./assets/endpoint_load_patient.png)
+
 **Load a Patient Genome**
 
 - `/genome/load_patient/{genome_file_name_with_path}`
 - If you provide the string `default` for `genome_file_name_with_path`, it will load the default patient data (`genome_Lilly_Mendel_v4.txt`.)
 
-![Endpoint: `load_patient`](./assets/endpoint_load_patient.png)
+There are several options:
+
+- **`patients/`**: Retrieves a list of the patients (that have been uploaded to the SQLite database.)
+- **`snp_research/`**: Retrieves the SNP Pairs data (from published literature, i.e. SNPedia); the underlying method is called when the Uvicorn FastAPI server is launched.
+- **`patient_profile/`**: Retrieves patient id, and patient name.
+- **`patient_genome_data/`**: Retrieves patient genotypes (gene varients, and the associated two alleles).
+- **`patient_genome_data_expanded/`**: Retrieves patient profile, and their genotypes, joined on `patient_id`.
+- **`full_report/`**: Retrieves the `patient_genome_data_expanded`, and published literature (join on `rsid.`)
 
 ### Swagger
 
-`http://127.0.0.1:8000/docs`
+Browse to: `http://127.0.0.1:8000/docs`
+
+![Swagger](./assets/endpoints_swagger.png)
+
+### Considerations
+
+1. The family tree/ancestry websites (i.e. that provide DNA tests; based on saliva samples), do not always use the same lettering as SNPedia.
+
+2. The family tree/ancestry websites do test for many, but not every gene variant.
 
 ### Unit Tests
 
