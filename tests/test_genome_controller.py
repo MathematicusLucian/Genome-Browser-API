@@ -12,10 +12,10 @@ def mock_fetch_full_report():
         yield mock_method
 
 def test_get_full_report_valid_patient_and_variant(mock_fetch_full_report):
-    mock_fetch_full_report.return_value = {"patient_id": "123", "variant_id": "rs123456", "data": "mock_data"}
-    response = client.get("/full_report?patient_id=123&variant_id=rs123456")
+    mock_fetch_full_report.return_value = {"patient_id": "123", "rsid": "rs123456", "data": "mock_data"}
+    response = client.get("/full_report?patient_id=123&rsid=rs123456")
     assert response.status_code == 200
-    assert response.json() == {"patient_id": "123", "variant_id": "rs123456", "data": "mock_data"}
+    assert response.json() == {"patient_id": "123", "rsid": "rs123456", "data": "mock_data"}
 
 def test_get_full_report_valid_patient_no_variant(mock_fetch_full_report):
     mock_fetch_full_report.return_value = {"patient_id": "123", "data": "mock_data"}
@@ -31,6 +31,6 @@ def test_get_full_report_invalid_patient(mock_fetch_full_report):
 
 def test_get_full_report_invalid_variant(mock_fetch_full_report):
     mock_fetch_full_report.return_value = {"error": "Variant not found"}
-    response = client.get("/full_report?patient_id=123&variant_id=invalid")
+    response = client.get("/full_report?patient_id=123&rsid=invalid")
     assert response.status_code == 404
     assert response.json() == {"error": "Variant not found"}

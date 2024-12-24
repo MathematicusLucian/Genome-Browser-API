@@ -1,3 +1,4 @@
+from email.mime import base
 import itertools
 import json
 import pandas as pd
@@ -95,12 +96,25 @@ class GenomeRepository:
     def _fetch_data_with_conditions(self, base_query, columns, offset, **kwargs):
         conditions = []
         params = []
-        if 'patient_id' in kwargs:
-            conditions.append('pgd.patient_id = ?')
+        # Determine if the query has a join by checking for the presence of 'JOIN' keyword
+        has_join = 'JOIN' in base_query.upper()        
+        # Adjust the column prefix based on whether a join is present
+        patient_id_column = 'pgd.patient_id' if has_join else 'patient_id'
+        rsid_column = 'pgd.rsid' if has_join else 'rsid'
+        allele1_column = 'pgd.allele1' if has_join else 'allele1'
+        allele2_column = 'pgd.allele2' if has_join else 'allele2'
+        if 'patient_id' in kwargs and kwargs['patient_id'] is not None:
+            conditions.append(f'{patient_id_column} = ?')
             params.append(kwargs['patient_id'])
-        if 'variant_id' in kwargs:
-            conditions.append('pgd.rsid = ?')
-            params.append(kwargs['variant_id'])
+        if 'rsid' in kwargs and kwargs['rsid'] is not None:
+            conditions.append(f'{rsid_column} = ?')
+            params.append(kwargs['rsid'])
+        if 'allele1' in kwargs and kwargs['allele1'] is not None:
+            conditions.append(f'{allele1_column} = ?')
+            params.append(kwargs['allele1'])
+        if 'allele2' in kwargs and kwargs['allele2'] is not None:
+            conditions.append(f'{allele2_column} = ?')
+            params.append(kwargs['allele2']) 
         if conditions:
             base_query += ' WHERE ' + ' AND '.join(conditions)
         base_query += ' LIMIT 25 OFFSET ?'
@@ -127,25 +141,17 @@ class GenomeRepository:
         base_query = '''
             SELECT genes 
             FROM snp_pairs
-        ''' # group by gene
+        ''' 
         return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
 
-    def fetch_patients_list(self, offset=0):
-        query = '''
-            SELECT *
-            FROM patients
-            LIMIT 25 OFFSET ?
-        '''
-        return self.sql_worker.execute(query, (offset,))
-
-    def fetch_patient_profile(self, offset=0, **kwargs):
+    def fetch_patients(self, offset=0, **kwargs):
         columns_query = '''SELECT name FROM pragma_table_info('patients')'''
         columns = self.sql_worker.execute(columns_query)
         columns = list(itertools.chain.from_iterable(columns))
         base_query = '''
             SELECT *
             FROM patients
-        '''
+        ''' 
         return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
     
     def fetch_patient_genome_data(self, offset=0, **kwargs): 
@@ -163,8 +169,6 @@ class GenomeRepository:
         query = '''
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
             FROM snp_pairs
-            WHERE patient_id = ? AND rsid = ? AND allele1 = ? AND allele2 = ?
-            LIMIT 25 OFFSET ?
         '''
         return self.sql_worker.execute(query, (patient_id, rsid, allele1, allele2, offset,))
         
@@ -174,8 +178,6 @@ class GenomeRepository:
             SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype
             FROM patients p
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
-            WHERE pgd.patient_id = ? AND pgd.rsid = ?
-            LIMIT 25 OFFSET ?
         '''
         return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
     

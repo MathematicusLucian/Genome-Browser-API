@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from typing import Any
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from routers import genome_router, notification_router 
+from routers import notification_router, patient_genome_router, snp_research_router
 
 load_dotenv()
 
@@ -24,5 +24,6 @@ def root():
 
 # other routers
 
-root_router.include_router(genome_router.genome_router, prefix="/genome", tags=["genome"])
+root_router.include_router(snp_research_router.snp_research_router, prefix="/snp_research", tags=["snp_research"])
+root_router.include_router(patient_genome_router.patient_genome_router, prefix="/patient_genome", tags=["patient_genome"])
 root_router.include_router(notification_router.notification_router, prefix="/notification", tags=["notification"])

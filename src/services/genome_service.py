@@ -58,10 +58,10 @@ class GenomeService:
         data = gp.convert(organism=organism, query='*')
         return data
 
-    def fetch_gene_data_by_variant(self, variant_id: Optional[str] = None):
-        if variant_id == None: variant_id = "rs11734132"
+    def fetch_gene_data_by_variant(self, rsid: Optional[str] = None):
+        if rsid == None: rsid = "rs11734132"
         gp = GProfiler(return_dataframe=True)
-        data = gp.snpense(query=[variant_id])
+        data = gp.snpense(query=[rsid])
         return data['gene_names'] 
     
     def _extract_genotype_info(self, df):
@@ -112,12 +112,24 @@ class GenomeService:
     def fetch_all_snp_pairs(self, **kwargs): 
         column_name = 'rsid'
         if 'offset' not in kwargs: kwargs['offset'] = 0
-        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        kwargs['rsid'] = check_if_default(kwargs.get('rsid')) if kwargs.get('rsid') else None
         gene_variant_research = self.genome_db_manager.fetch_snp_pairs_data(**kwargs)
         if gene_variant_research is not None:
             return gene_variant_research
         else:
             self._generate_error_message(column_name, kwargs)
+
+    def fetch_snp_pairs_data_by_genotype(self, **kwargs): 
+        column_name = 'rsid'  
+        if 'offset' not in kwargs: kwargs['offset'] = 0
+        kwargs['rsid'] = check_if_default(kwargs.get('rsid')) if kwargs.get('rsid') else None
+        kwargs['allele1'] = check_if_default(kwargs.get('allele1')) if kwargs.get('allele1') else None
+        kwargs['allele2'] = check_if_default(kwargs.get('allele2')) if kwargs.get('allele2') else None
+        patients_snp_pairs_by_genotype= self.genome_db_manager.fetch_snp_pairs_data_by_genotype(**kwargs)
+        if patients_snp_pairs_by_genotype is not None:
+            return patients_snp_pairs_by_genotype
+        else:         
+            self._generate_error_message(column_name, kwargs) 
         
     # Patient Genome: /patient 
 
@@ -131,28 +143,21 @@ class GenomeService:
 
     # Individual Patient Profiles 
 
-    def fetch_patients(self):
-        patients = self.genome_db_manager.fetch_patients_list(offset=0)
+    def fetch_patient_profile(self, **kwargs):
+        column_name = 'rsid'  
+        if 'offset' not in kwargs: kwargs['offset'] = 0
+        patients = self.genome_db_manager.fetch_patients(**kwargs)
         if patients is not None:
             return patients
-        else:
-            raise TypeError("No patients - load patient data.")
-
-    def fetch_patient_profile(self, **kwargs): 
-        column_name = 'rsid'  
-        if 'offset' not in kwargs: kwargs['offset'] = 0 
-        patients_genome_data_all = self.genome_db_manager.fetch_patient_profile(**kwargs)
-        if patients_genome_data_all is not None:
-            return patients_genome_data_all
         else:         
-            self._generate_error_message(column_name, kwargs) 
+            self._generate_error_message(column_name, kwargs)  
 
     # Individual Patient Genotypes 
     
     def fetch_patient_genome_data(self, **kwargs): 
         column_name = 'rsid'  
         if 'offset' not in kwargs: kwargs['offset'] = 0
-        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        kwargs['rsid'] = check_if_default(kwargs.get('rsid')) if kwargs.get('rsid') else None
         patients_genome_data_all = self.genome_db_manager.fetch_patient_genome_data(**kwargs)
         if patients_genome_data_all is not None:
             return patients_genome_data_all
@@ -164,7 +169,7 @@ class GenomeService:
     def fetch_patient_data_expanded(self, **kwargs): 
         column_name = 'rsid'
         if 'offset' not in kwargs: kwargs['offset'] = 0
-        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        kwargs['rsid'] = check_if_default(kwargs.get('rsid')) if kwargs.get('rsid') else None
         gene_variant_patient_details = self.genome_db_manager.fetch_patient_data_expanded(**kwargs)
         if gene_variant_patient_details is not None:
             return gene_variant_patient_details
@@ -176,7 +181,7 @@ class GenomeService:
     def fetch_full_report(self, **kwargs): 
         column_name = 'rsid'
         if 'offset' not in kwargs: kwargs['offset'] = 0
-        kwargs['rsid'] = check_if_default(kwargs.get('variant_id')) if kwargs.get('variant_id') else None
+        kwargs['rsid'] = check_if_default(kwargs.get('rsid')) if kwargs.get('rsid') else None
         patient_data_as_list = self.genome_db_manager.fetch_full_report(**kwargs)
         if patient_data_as_list is not None:
             return patient_data_as_list

@@ -4,7 +4,9 @@
 
 The Genome Browser API is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
 
-••Objectives\*\*:
+![Swagger](./assets/endpoints_swagger.png)
+
+### Objectives
 
 1. Comparison of ancestry website DNA report with SNPedia data. The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
 
@@ -87,8 +89,6 @@ The Genome Browser API is a **FastAPI**-based (Python) server application (with 
 2. The family tree/ancestry websites do test for many, but not every gene variant.
 
 ## Endpoints
-
-![Swagger](./assets/endpoints_swagger.png)
 
 There are several options:
 

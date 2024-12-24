@@ -36,13 +36,13 @@ def test_get_full_report_negative(mock_genome_service):
 
 def test_get_snp_research_positive(mock_genome_service):
     mock_genome_service.fetch_all_snp_pairs.return_value = {"snp_pairs": []}
-    response = client.get("/snp_research", params={"variant_id": "rs123"})
+    response = client.get("/snp_research", params={"rsid": "rs123"})
     assert response.status_code == 200
     assert response.json() == {"snp_pairs": []}
 
 def test_get_snp_research_negative(mock_genome_service):
     mock_genome_service.fetch_all_snp_pairs.side_effect = Exception("Fetch failed")
-    response = client.get("/snp_research", params={"variant_id": "rs123"})
+    response = client.get("/snp_research", params={"rsid": "rs123"})
     assert response.status_code == 500
     assert response.json() == {"detail": "Fetch failed"}
 
@@ -72,12 +72,12 @@ def test_get_list_of_chromosomes_from_gprofiler_api_negative(mock_genome_service
 
 def test_get_from_gprofiler_api_gene_data_matching_variant_rsid_positive(mock_genome_service):
     mock_genome_service.fetch_gene_data_by_variant.return_value = {"gene_data": []}
-    response = client.get("/fetch_gene_by_variant", params={"variant_id": "rs123"})
+    response = client.get("/fetch_gene_by_variant", params={"rsid": "rs123"})
     assert response.status_code == 200
     assert response.json() == {"gene_data": []}
 
 def test_get_from_gprofiler_api_gene_data_matching_variant_rsid_negative(mock_genome_service):
     mock_genome_service.fetch_gene_data_by_variant.side_effect = Exception("Fetch failed")
-    response = client.get("/fetch_gene_by_variant", params={"variant_id": "rs123"})
+    response = client.get("/fetch_gene_by_variant", params={"rsid": "rs123"})
     assert response.status_code == 500
     assert response.json() == {"detail": "Fetch failed"}

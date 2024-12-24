@@ -44,7 +44,7 @@ def test_get_patients(mock_genome_service):
 
 def test_get_snp_research(mock_genome_service):
     mock_genome_service['fetch_all_snp_pairs'].return_value = {"snp_data": "mock_data"}
-    response = client.get("/snp_research?variant_id=rs123456")
+    response = client.get("/snp_research?rsid=rs123456")
     assert response.status_code == 200
     assert response.json() == {"snp_data": "mock_data"}
 
@@ -62,7 +62,7 @@ def test_get_chromosomes_from_gprofiler(mock_genome_service):
 
 def test_get_gene_data_by_variant(mock_genome_service):
     mock_genome_service['fetch_gene_data_by_variant'].return_value = {"gene_data": "mock_data"}
-    response = client.get("/fetch_gene_by_variant?variant_id=rs123456")
+    response = client.get("/fetch_gene_by_variant?rsid=rs123456")
     assert response.status_code == 200
     assert response.json() == {"gene_data": "mock_data"}
 
@@ -74,19 +74,19 @@ def test_get_patient_profile(mock_genome_service):
 
 def test_get_patient_genome_data(mock_genome_service):
     mock_genome_service['fetch_patient_genome_data'].return_value = {"genome_data": "mock_data"}
-    response = client.get("/patient_genome_data?patient_id=123&variant_id=rs123456")
+    response = client.get("/patient_genome_data?patient_id=123&rsid=rs123456")
     assert response.status_code == 200
     assert response.json() == {"genome_data": "mock_data"}
 
 def test_get_patient_genome_data_expanded(mock_genome_service):
     mock_genome_service['fetch_patient_data_expanded'].return_value = {"expanded_data": "mock_data"}
-    response = client.get("/patient_genome_data/expanded?patient_id=123&variant_id=rs123456")
+    response = client.get("/patient_genome_data/expanded?patient_id=123&rsid=rs123456")
     assert response.status_code == 200
     assert response.json() == {"expanded_data": "mock_data"}
 
 def test_get_full_report(mock_genome_service):
     mock_genome_service['fetch_full_report'].return_value = {"full_report": "mock_data"}
-    response = client.get("/full_report?patient_id=123&variant_id=rs123456")
+    response = client.get("/full_report?patient_id=123&rsid=rs123456")
     assert response.status_code == 200
     assert response.json() == {"full_report": "mock_data"}
 
@@ -98,10 +98,10 @@ def mock_fetch_full_report():
         yield mock_method
 
 def test_get_full_report_valid_patient_and_variant(mock_fetch_full_report):
-    mock_fetch_full_report.return_value = {"patient_id": "123", "variant_id": "rs123456", "data": "mock_data"}
-    response = client.get("/full_report?patient_id=123&variant_id=rs123456")
+    mock_fetch_full_report.return_value = {"patient_id": "123", "rsid": "rs123456", "data": "mock_data"}
+    response = client.get("/full_report?patient_id=123&rsid=rs123456")
     assert response.status_code == 200
-    assert response.json() == {"patient_id": "123", "variant_id": "rs123456", "data": "mock_data"}
+    assert response.json() == {"patient_id": "123", "rsid": "rs123456", "data": "mock_data"}
 
 def test_get_full_report_valid_patient_no_variant(mock_fetch_full_report):
     mock_fetch_full_report.return_value = {"patient_id": "123", "data": "mock_data"}
@@ -117,6 +117,6 @@ def test_get_full_report_invalid_patient(mock_fetch_full_report):
 
 def test_get_full_report_invalid_variant(mock_fetch_full_report):
     mock_fetch_full_report.return_value = {"error": "Variant not found"}
-    response = client.get("/full_report?patient_id=123&variant_id=invalid")
+    response = client.get("/full_report?patient_id=123&rsid=invalid")
     assert response.status_code == 404
     assert response.json() == {"error": "Variant not found"}

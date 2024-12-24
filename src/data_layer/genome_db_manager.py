@@ -28,14 +28,14 @@ class GenomeDatabaseManager:
     def fetch_genes_in_genome(self, offset=0, **kwargs):
         return self.repository.fetch_genes_in_genome(offset, **kwargs)
 
-    def fetch_patients_list(self, offset=0):
-        return self.repository.fetch_patients_list(offset)
-
-    def fetch_patient_profile(self, offset=0, **kwargs):
-        return self.repository.fetch_patient_profile(offset, **kwargs)
+    def fetch_patients(self, offset=0, **kwargs):
+        return self.repository.fetch_patients(offset, **kwargs)
 
     def fetch_patient_genome_data(self, offset=0, **kwargs):
         return self.repository.fetch_patient_genome_data(offset, **kwargs)
+    
+    def fetch_snp_pairs_data_by_genotype(self, offset=0, **kwargs):  
+        return self.repository.fetch_snp_pairs_data_by_genotype(self, offset, **kwargs)
 
     def fetch_patient_data_expanded(self, offset=0, **kwargs):
         return self.repository.fetch_patient_data_expanded(offset, **kwargs)
