@@ -1,4 +1,5 @@
 import os
+from tkinter import N
 from dotenv import load_dotenv
 from typing import Any, Callable, Optional
 from fastapi import APIRouter, Depends, WebSocketDisconnect
@@ -9,6 +10,8 @@ from fastapi.openapi.utils import get_openapi
 import threading
 import asyncio
 import requests, sys
+import json
+from gprofiler import GProfiler
 from genomebrowser import GenomeBrowser
 from genomedatabase import GenomeDatabase
 load_dotenv()
@@ -146,7 +149,7 @@ def get_snp_research(variant_id: Optional[str] = None):
     return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, variant_id=variant_id))
 
 # Chromosomes
-@router.post("/fetch_chromosomes")
+@router.post("/fetch_chromosomes/ensembl")
 def get_chromosomes(): 
     server = "https://grch37.rest.ensembl.org"
     ext = "/info/assembly/homo_sapiens?"
@@ -159,6 +162,20 @@ def get_chromosomes():
         
     decoded = r.json()
     return repr(decoded)
+
+@router.post("/fetch_chromosomes/gprofiler")
+def get_chromosomes(): 
+    organism = 'hsapiens'
+    gp = GProfiler(return_dataframe=True)
+    data = gp.convert(organism=organism, query='*')
+    return data
+
+@router.post("/fetch_gene_by_variant")
+def get_chromosomes(variant_id: Optional[str] = None):
+    if variant_id == None: variant_id = "rs11734132"
+    gp = GProfiler(return_dataframe=True)
+    data = gp.snpense(query=[variant_id])
+    return data['gene_names']
 
 # Fetch Patient Data
 

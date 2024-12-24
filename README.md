@@ -95,13 +95,16 @@ Test Cases:
 
 ## Data Sources
 
-### Genome
+### Published literature
+
+**Published Genome**
 
 `genome_Lilly_Mendel_v4.txt`
 
 [SNPedia: Lily Mendel](https://www.snpedia.com/index.php/User:Lilly_Mendel)
 
-**Chromosomes**:
+**Chromosomes data from ensembl**:
+[Source](https://grch37.rest.ensembl.org/documentation/info/assembly_info)
 Chromosome 1
 Chromosome 2
 Chromosome 3
@@ -127,10 +130,10 @@ Chromosome 22
 X Chromosome
 Y Chromosome
 
-### SNP Pairs Data
+**SNP Pairs Data**
 
 The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
 
 `snp_data.csv`
 
-**Columns:** RSID, Magnitude, Risk, Notes
+_Columns:_ RSID, Magnitude, Risk, Notes
