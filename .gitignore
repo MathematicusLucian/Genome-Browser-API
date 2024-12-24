@@ -2,10 +2,19 @@
 genomebrowser/
 .env
 
+# Data Files
+data/*
+!data/genomes
+data/genomes/*
+!data/genomes/genome_Lilly_Mendel_v4.txt
+
 # Database
 *.db
 **.db
 **/**.db 
+*.db-journal
+**.db-journal
+**/**.db-journal
 
 # IDE
 .vscode
