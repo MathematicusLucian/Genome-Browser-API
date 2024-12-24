@@ -4,12 +4,12 @@ from fastapi import APIRouter
 from fastapi.params import Query
 from fastapi.responses import JSONResponse
 import threading  
-from services.genome_service import GenomeService
+from controllers.genome_controller import GenomeController
 
 load_dotenv()
 
-genome_router = APIRouter()
-genome_service = GenomeService()
+genome_router = APIRouter() 
+genome_controller = GenomeController()
 
 # Patient Genome: /patient
 
@@ -23,8 +23,7 @@ def load_genome(genome_file_name_with_path: Optional[str] = Query(None)):
         Returns:
         - **JSONResponse**: Indicating that genome loading has commenced and the path to the genome file.
     """
-    threading.Thread(target=genome_service.load_genome_background, args=(genome_file_name_with_path,)).start()
-    return JSONResponse(content={"message": "Genome loading commenced", "genome_file_name_with_path": genome_file_name_with_path})
+    return genome_controller.load_genome(genome_file_name_with_path)
 
 # List of All Patients
 
@@ -38,8 +37,7 @@ def get_full_report():
         Returns:
         - **JSONResponse**: A response object containing the full report in JSON format.
     """
-    full_report = genome_service.fetch_patients()
-    return JSONResponse(content=full_report)
+    return genome_controller.get_full_report()
 
 # General Human Genome
 
@@ -53,7 +51,7 @@ def get_snp_research(variant_id: Optional[str] = None):
         Returns:
         - **JSONResponse**: Containing SNP research data.
     """
-    return JSONResponse(content=genome_service.fetch_all_snp_pairs(variant_id=variant_id))
+    return genome_controller.get_snp_research(variant_id)
 
 # Chromosomes
 @genome_router.get("/fetch_chromosomes/ensembl")
@@ -64,7 +62,7 @@ def get_list_of_chromosomes_from_ensembl_api():
         Returns:
         - **JSONResponse**: Containing the list of chromosomes.
     """
-    return JSONResponse(content=genome_service.fetch_chromosomes_from_ensembl())
+    return genome_controller.get_list_of_chromosomes_from_ensembl_api()
 
 @genome_router.get("/fetch_chromosomes/gprofiler")
 def get_list_of_chromosomes_from_gprofiler_api(): 
@@ -74,7 +72,7 @@ def get_list_of_chromosomes_from_gprofiler_api():
         Returns:
         - **JSONResponse**: Containing the list of chromosomes.
     """
-    return JSONResponse(content=genome_service.fetch_chromosomes_from_gprofiler())
+    return genome_controller.get_list_of_chromosomes_from_gprofiler_api()
 
 @genome_router.get("/fetch_gene_by_variant")
 def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[str] = None):
@@ -86,7 +84,7 @@ def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[
         Returns:
         - **JSONResponse**: Containing the details of the gene matching the variant RSID.
     """
-    return JSONResponse(content=genome_service.fetch_gene_data_by_variant(variant_id))
+    return genome_controller.get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id)
 
 # Fetch Patient Data
 
@@ -100,7 +98,7 @@ def get_patient_genome_data(patient_id: Optional[str] = None):
         Returns:
         - **JSONResponse**: Containing the patient's genome data.
     """
-    return JSONResponse(content=genome_service.fetch_patient_profile(patient_id))
+    return genome_controller.get_patient_genome_data(patient_id)
 
 @genome_router.get("/patient_genome_data")
 def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
@@ -113,7 +111,7 @@ def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Option
         Returns:
         - **JSONResponse**: Containing the genome data.
     """
-    return JSONResponse(content=genome_service.fetch_patient_genome_data(patient_id, variant_id))
+    return genome_controller.get_patient_genome_data(patient_id, variant_id)
 
 @genome_router.get("/patient_genome_data/expanded")
 def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
@@ -123,7 +121,7 @@ def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_i
         - **patient_id**: An optional ID of the patient whose genome data is to be retrieved.
         - **variant_id**: An optional ID of the variant to filter the genome data.
     """
-    return JSONResponse(content=genome_service.fetch_patient_data_expanded(patient_id, variant_id))
+    return genome_controller.get_patient_genome_data_expanded(patient_id, variant_id)
 
 @genome_router.get("/full_report")
 def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
@@ -136,4 +134,4 @@ def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] 
         Returns:
         - **JSONResponse**: Containing the full report data.
     """
-    return JSONResponse(content=genome_service.fetch_full_report(patient_id, variant_id))
+    return genome_controller.get_full_report(patient_id, variant_id)

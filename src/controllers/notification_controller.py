@@ -1,14 +1,14 @@
-from fastapi import APIRouter, WebSocket
+from fastapi import WebSocket
 from services.notification_service import NotificationService
 
-router = APIRouter()
-websocket_service = NotificationService()
+class NotificationController:
+    def __init__(self):
+        self.notification_service = NotificationService()
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket): 
-    """
-        WebSocket endpoint for real-time communication.
+    async def notify_patient_file_load_complete(self, websocket: WebSocket): 
+        """
+            WebSocket endpoint for real-time communication.
 
-        - **Websocket**: The WebSocket connection instance.
-    """
-    await websocket_service.websocket_endpoint(websocket)
+            - **Websocket**: The WebSocket connection instance.
+        """
+        await self.notification_service.notify_patient_file_load_complete(websocket)

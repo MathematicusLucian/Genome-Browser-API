@@ -2,12 +2,12 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, WebSocketDisconnect 
 from fastapi.websockets import WebSocket
 from fastapi.openapi.utils import get_openapi 
-from services.notification_service import NotificationService
+from controllers.notification_controller import NotificationController
 
 load_dotenv()
 
 notification_router = APIRouter()
-websocket_service = NotificationService()
+notification_controller = NotificationController()
 
 def custom_openapi():
     if notification_router.openapi_schema:
@@ -43,4 +43,4 @@ async def notify_patient_file_load_complete(websocket: WebSocket):
 
         - **Websocket**: The WebSocket connection instance.
     """
-    await websocket_service.notify_patient_file_load_complete(websocket)
+    await notification_controller.notify_patient_file_load_complete(websocket)
