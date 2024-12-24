@@ -1,8 +1,8 @@
 from fastapi import APIRouter, WebSocket
-from services.websocket_service import WebSocketService
+from services.notification_service import NotificationService
 
 router = APIRouter()
-websocket_service = WebSocketService()
+websocket_service = NotificationService()
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket): 

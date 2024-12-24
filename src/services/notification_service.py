@@ -1,7 +1,7 @@
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 
-class WebSocketService:
-    async def websocket_endpoint(self, websocket: WebSocket): 
+class NotificationService:
+    async def notify_patient_file_load_complete(self, websocket: WebSocket): 
         await websocket.accept()
         try:
             while True:

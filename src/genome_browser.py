@@ -21,8 +21,8 @@ class GenomeBrowser(object):
     default_genome_file_name_with_path = None
 
     def __init__(self, snp_pairs_file_name_with_path=None, default_genome_file_name_with_path=None, genome_repository=None):
-        self.genome_repository = genome_repository
         self.default_genome_file_name_with_path = default_genome_file_name_with_path
+        self.genome_repository = genome_repository
         if snp_pairs_file_name_with_path is not None:
             self.load_snp_pairs_df(snp_pairs_file_name_with_path)
  

@@ -1,65 +1,19 @@
-import os
 from dotenv import load_dotenv
-from typing import Any, Callable, Optional
-from fastapi import APIRouter, Depends, WebSocketDisconnect
+from typing import Any, Optional
+from fastapi import APIRouter
 from fastapi.params import Query
-from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.websockets import WebSocket
-from fastapi.openapi.utils import get_openapi
-import threading 
-from controllers.genome_controller import GenomeController
-from controllers.websocket_controller import WebSocketController
+from fastapi.responses import JSONResponse
+import threading  
 from services.genome_service import GenomeService
-from services.websocket_service import WebSocketService
 
 load_dotenv()
 
-router = APIRouter()
+genome_router = APIRouter()
 genome_service = GenomeService()
-websocket_service = WebSocketService()
-
-def custom_openapi():
-    if router.openapi_schema:
-        return router.openapi_schema
-    openapi_schema = get_openapi(
-        title="WebSocket API",
-        version="1.0.0",
-        description="This is a simple WebSocket API",
-        routes=router.routes,
-    )
-    openapi_schema["paths"]["/ws"] = {
-        "get": {
-            "summary": "WebSocket connection",
-            "description": "Connect to the WebSocket server. Send a message and receive a response.",
-            "responses": {
-                "101": {
-                    "description": "Switching Protocols - The client is switching protocols as requested by the server.",
-                }
-            }
-        }
-    }
-    router.openapi_schema = openapi_schema
-    return router.openapi_schema
-
-router.openapi = custom_openapi
-
-# root
-
-@router.get("/")
-def root():
-    """
-        Return a welcome message for the Genome Browser API.
-
-        - **content**: A dictionary containing the welcome message.
-
-        Returns:
-        - **JSONResponse**: With a welcome message.
-    """
-    return JSONResponse(content={"Genome Browser API": "Welcome to Genome Browser API"})
 
 # Patient Genome: /patient
 
-@router.post("/load_genome")
+@genome_router.post("/load_genome")
 def load_genome(genome_file_name_with_path: Optional[str] = Query(None)): 
     """
         Load a genome file in the background.
@@ -72,19 +26,9 @@ def load_genome(genome_file_name_with_path: Optional[str] = Query(None)):
     threading.Thread(target=genome_service.load_genome_background, args=(genome_file_name_with_path,)).start()
     return JSONResponse(content={"message": "Genome loading commenced", "genome_file_name_with_path": genome_file_name_with_path})
 
-# Notify UI or log the completion of data loading activity
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket): 
-    """
-        WebSocket endpoint for real-time communication.
-
-        - **Websocket**: The WebSocket connection instance.
-    """
-    await websocket_service.websocket_endpoint(websocket)
-
 # List of All Patients
 
-@router.get("/patients")
+@genome_router.get("/patients")
 def get_full_report():
     """
         Retrieve the full report of patients.
@@ -99,7 +43,7 @@ def get_full_report():
 
 # General Human Genome
 
-@router.get("/snp_research")
+@genome_router.get("/snp_research")
 def get_snp_research(variant_id: Optional[str] = None):
     """
         Retrieve SNP research data.
@@ -112,7 +56,7 @@ def get_snp_research(variant_id: Optional[str] = None):
     return JSONResponse(content=genome_service.fetch_all_snp_pairs(variant_id=variant_id))
 
 # Chromosomes
-@router.get("/fetch_chromosomes/ensembl")
+@genome_router.get("/fetch_chromosomes/ensembl")
 def get_list_of_chromosomes_from_ensembl_api(): 
     """
         Fetch the list of chromosomes from the Ensembl API.
@@ -122,7 +66,7 @@ def get_list_of_chromosomes_from_ensembl_api():
     """
     return JSONResponse(content=genome_service.fetch_chromosomes_from_ensembl())
 
-@router.get("/fetch_chromosomes/gprofiler")
+@genome_router.get("/fetch_chromosomes/gprofiler")
 def get_list_of_chromosomes_from_gprofiler_api(): 
     """
         Fetch the list of chromosomes from the g:Profiler API.
@@ -132,7 +76,7 @@ def get_list_of_chromosomes_from_gprofiler_api():
     """
     return JSONResponse(content=genome_service.fetch_chromosomes_from_gprofiler())
 
-@router.get("/fetch_gene_by_variant")
+@genome_router.get("/fetch_gene_by_variant")
 def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[str] = None):
     """
         Fetch gene data matching a variant RSID from the g:Profiler API.
@@ -146,7 +90,7 @@ def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[
 
 # Fetch Patient Data
 
-@router.get("/patient_profile")
+@genome_router.get("/patient_profile")
 def get_patient_genome_data(patient_id: Optional[str] = None):
     """
         Retrieve genome data for a specific patient.
@@ -158,7 +102,7 @@ def get_patient_genome_data(patient_id: Optional[str] = None):
     """
     return JSONResponse(content=genome_service.fetch_patient_profile(patient_id))
 
-@router.get("/patient_genome_data")
+@genome_router.get("/patient_genome_data")
 def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
     """
         Retrieve genome data for a specific patient and variant.
@@ -171,7 +115,7 @@ def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Option
     """
     return JSONResponse(content=genome_service.fetch_patient_genome_data(patient_id, variant_id))
 
-@router.get("/patient_genome_data/expanded")
+@genome_router.get("/patient_genome_data/expanded")
 def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
     """
         Retrieve expanded genome data for a patient.
@@ -181,7 +125,7 @@ def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_i
     """
     return JSONResponse(content=genome_service.fetch_patient_data_expanded(patient_id, variant_id))
 
-@router.get("/full_report")
+@genome_router.get("/full_report")
 def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
     """
         Retrieve the full report for a specific patient and variant.

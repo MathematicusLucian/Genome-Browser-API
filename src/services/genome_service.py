@@ -13,7 +13,7 @@ class GenomeService:
         self.genome_browser = GenomeBrowser(
             snp_pairs_file_name_with_path=os.getenv('SNP_PAIRS_FILE_PATH'),
             default_genome_file_name_with_path=os.getenv('GENOME_FILE_PATH'),
-            genome_database=GenomeDatabase(db_path=os.getenv('SQLITE_DATABASE_PATH'))
+            genome_repository=GenomeDatabase(db_path=os.getenv('SQLITE_DATABASE_PATH'))
         )
 
     async def notify_ui(self, genome_file_name_with_path: str):

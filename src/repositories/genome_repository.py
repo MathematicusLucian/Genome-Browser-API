@@ -1,6 +1,7 @@
 import itertools
 import json
 import pandas as pd
+from pydantic import ValidationError
 from sqlite3worker import Sqlite3Worker
 from models import SnpPair, Patient, PatientGenomeData
 
@@ -57,8 +58,14 @@ class GenomeRepository:
 
     def save_snp_pairs_to_db(self, snp_df):
         for index, row in snp_df.iterrows():
-            snp_pair = SnpPair(**row)
-            self.update_or_insert_snp_pair(snp_pair)
+            try:
+                # Ensure 'notes' is a string
+                row['notes'] = str(row['notes']) if pd.notna(row['notes']) else ''
+                snp_pair = SnpPair(**row)
+                # Save snp_pair to the database
+                self.update_or_insert_snp_pair(snp_pair) 
+            except ValidationError as e:
+                print(f"Validation error: {e}")
 
     def update_or_insert_patient(self, patient: Patient):
         query = '''

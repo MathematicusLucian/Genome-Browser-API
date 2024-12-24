@@ -1,10 +1,10 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from src.services.websocket_service import WebSocketService
+from services.notification_service import NotificationService
 
 @pytest.fixture
 def websocket_service():
-    return WebSocketService()
+    return NotificationService()
 
 def test_connect_positive(websocket_service):
     with patch('src.services.websocket_service.WebSocketClient') as MockWebSocketClient:

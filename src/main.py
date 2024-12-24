@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from routes import router
+from routers.root_router import root_router
 
 # Routing
 app = FastAPI(
@@ -8,7 +8,7 @@ app = FastAPI(
     description="...",
     version="1.0.0"
 )
-app.include_router(router)
+app.include_router(root_router)
 
 # Enable Swagger UI
 app.openapi_url = "/openapi.json"

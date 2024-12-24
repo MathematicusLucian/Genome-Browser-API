@@ -1,6 +1,6 @@
 import pytest
 from fastapi.testclient import TestClient
-from src.routes import router
+from routers.root_router import router
 from unittest.mock import patch, MagicMock
 
 client = TestClient(router)

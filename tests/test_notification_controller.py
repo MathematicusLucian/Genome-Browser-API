@@ -1,14 +1,15 @@
+from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
-from src.controllers.websocket_controller import router
-from src.services.websocket_service import WebSocketService
+from controllers.notification_controller import router
+from services.notification_service import NotificationService
 
 client = TestClient(router)
 
 @pytest.fixture
 def mock_websocket_service():
-    with patch('src.controllers.websocket_controller.WebSocketService') as MockWebSocketService:
-        yield MockWebSocketService.return_value
+    with patch('src.controllers.websocket_controller.NotificationService') as MockNotificationService:
+        yield MockNotificationService.return_value
 
 def test_connect_websocket_positive(mock_websocket_service):
     mock_websocket_service.connect.return_value = True

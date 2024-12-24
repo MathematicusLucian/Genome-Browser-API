@@ -24,25 +24,33 @@ The Genome Browser API is a **FastAPI**-based (Python) server application (with 
 
 1. **Controllers**:
 
+   - Handles the HTTP requests, processes input, and returns HTTP responses. It should call the service layer to perform business logic.
    - Created `controllers/genome_controller.py` and `controllers/websocket_controller.py` to handle the routing logic.
    - Moved route-specific logic from `routes.py` to the respective controllers.
    - Added detailed comments to the controllers to explain the purpose and functionality of each endpoint.
 
 2. **Services**:
 
+   - Contains the business logic of the application. It performs operations and calls the repository layer to interact with the database.
    - Created `services/genome_service.py` and `services/websocket_service.py` to handle the business logic.
    - Moved business logic from the controllers to the respective services.
    - This separation allows for better unit testing and adherence to the Single Responsibility Principle (SRP).
 
 3. **Repositories**:
 
+   - Handles direct interactions with the database. It performs CRUD operations and returns data to the service layer.
    - Created `repositories/genome_repository.py` to handle database interactions.
    - Moved database interaction logic from `genomedatabase.py` to the repository.
    - This follows the Repository Pattern, which abstracts the data access logic and provides a clean API for the domain layer.
 
 4. **Models**:
+
    - Created `models.py` to define data models using **Pydantic**.
    - This ensures data validation and type checking, improving the robustness of the application.
+
+5. **Routes**:
+
+   - Defines the API endpoints and maps them to the appropriate controller functions.
 
 ### Design Patterns and Principles
 
