@@ -44,7 +44,7 @@ There are several options:
 
 ### Swagger
 
-Browse to: `http://127.0.0.1:8000/docs`
+Browse to: `http://127.0.0.1:8000/docs` or `http://127.0.0.1:8000/redoc`.
 
 ![Swagger](./assets/endpoints_swagger.png)
 
@@ -63,7 +63,7 @@ How to run the tests:
 
 ## Testing Details
 
-### Unit Tests
+### Unit Tests
 
 The `test` directory contains `pytest` test cases for the `GenomeBrowser` class methods, which include both positive and negative scenarios, as well as exception handling.
 

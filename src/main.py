@@ -3,7 +3,11 @@ import uvicorn
 from routes import router
 
 # Routing
-app = FastAPI()
+app = FastAPI(
+    title="Genome Browser API",
+    description="...",
+    version="1.0.0"
+)
 app.include_router(router, prefix="/api")
 
 # Enable Swagger UI

@@ -68,18 +68,39 @@ genome_browser = GenomeBrowser(
 
 @router.get("/")
 def root():
+    """
+        Return a welcome message for the Genome Browser API.
+
+        - **content**: A dictionary containing the welcome message.
+
+        Returns:
+        - **JSONResponse**: With a welcome message.
+    """
     return JSONResponse(content={"Genome Browser API": "Welcome to Genome Browser API"})
 
 # Patient Genome: /patient
 
 @router.post("/load_genome")
 def load_genome(genome_file_name_with_path: Optional[str] = Query(None)): 
+    """
+        Load a genome file in the background.
+        
+        - **genome_file_name_with_path**: Optional; The path to the genome file to be loaded.
+
+        Returns:
+        - **JSONResponse**: Indicating that genome loading has commenced and the path to the genome file.
+    """
     threading.Thread(target=load_genome_background, args=(genome_file_name_with_path,)).start()
     return JSONResponse(content={"message": "Genome loading commenced", "genome_file_name_with_path": genome_file_name_with_path})
 
 # Notify UI or log the completion of data loading activity
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket): 
+    """
+        WebSocket endpoint for real-time communication.
+
+        - **Websocket**: The WebSocket connection instance.
+    """
     await websocket.accept()
     try:
         while True:
@@ -94,6 +115,14 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @router.get("/patients")
 def get_full_report():
+    """
+        Retrieve the full report of patients.
+
+        - **full_report**: A JSON object containing the full report of patients.
+
+        Returns:
+        - **JSONResponse**: A response object containing the full report in JSON format.
+    """
     full_report = genome_browser.fetch_patients()
     return JSONResponse(content=full_report)
 
@@ -105,20 +134,60 @@ def fetch_data(fetch_method: Callable, **kwargs) -> Any:
 
 @router.get("/snp_research")
 def get_snp_research(variant_id: Optional[str] = None):
+    """
+        Retrieve SNP research data.
+
+        - **variant_id**: An optional string representing the variant ID.
+
+        Returns:
+        - **JSONResponse**: Containing SNP research data.
+    """
     return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, variant_id=variant_id))
 
 @router.get("/patient_profile")
 def get_patient_genome_data(patient_id: Optional[str] = None):
+    """
+        Retrieve genome data for a specific patient.
+
+        - **patient_id**: An optional string representing the ID of the patient whose genome data is to be fetched.
+
+        Returns:
+        - **JSONResponse**: Containing the patient's genome data.
+    """
     return JSONResponse(content=fetch_data(fetch_method=genome_browser.fetch_patient_profile, patient_id=patient_id))
 
 @router.get("/patient_genome_data")
 def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
+    """
+        Retrieve genome data for a specific patient and variant.
+
+        - **patient_id**: The ID of the patient whose genome data is to be retrieved.
+        - **variant_id**: The ID of the variant to filter the genome data.
+
+        Returns:
+        - **JSONResponse**: Containing the genome data.
+    """
     return JSONResponse(content=fetch_data(fetch_method=genome_browser.fetch_patient_genome_data, patient_id=patient_id, variant_id=variant_id))
 
 @router.get("/patient_genome_data/expanded")
 def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
+    """
+        Retrieve expanded genome data for a patient.
+
+        - **patient_id**: An optional ID of the patient whose genome data is to be retrieved.
+        - **variant_id**: An optional ID of the variant to filter the genome data.
+    """
     return JSONResponse(content=fetch_data(genome_browser.fetch_patient_data_expanded, patient_id=patient_id, variant_id=variant_id))
 
 @router.get("/full_report")
 def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
+    """
+        Retrieve the full report for a specific patient and variant.
+
+        - **patient_id**: Optional; The ID of the patient for whom the report is to be fetched.
+        - **variant_id**: Optional; The ID of the variant for which the report is to be fetched.
+
+        Returns:
+        - **JSONResponse**: Containing the full report data.
+    """
     return JSONResponse(content=fetch_data(genome_browser.fetch_full_report, patient_id=patient_id, variant_id=variant_id))
