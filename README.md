@@ -1,4 +1,4 @@
-# Genome Browser API
+# Genome-Browser-API
 
 ## Overview
 

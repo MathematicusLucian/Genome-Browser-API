@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from routers.root_router import root_router
 
@@ -9,6 +10,20 @@ app = FastAPI(
     version="1.0.0"
 )
 app.include_router(root_router)
+
+# CORS
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",  
+    "http://192.168.1.149:3000", 
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Enable Swagger UI
 app.openapi_url = "/openapi.json"
