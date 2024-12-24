@@ -8,6 +8,7 @@ from fastapi.websockets import WebSocket
 from fastapi.openapi.utils import get_openapi
 import threading
 import asyncio
+import requests, sys
 from genomebrowser import GenomeBrowser
 from genomedatabase import GenomeDatabase
 load_dotenv()
@@ -126,11 +127,11 @@ def get_full_report():
     full_report = genome_browser.fetch_patients()
     return JSONResponse(content=full_report)
 
-# Fetch Patient Data
-
 def fetch_data(fetch_method: Callable, **kwargs) -> Any:
     filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None and v != ""}
     return fetch_method(**filtered_kwargs)
+
+# General Human Genome
 
 @router.get("/snp_research")
 def get_snp_research(variant_id: Optional[str] = None):
@@ -143,6 +144,23 @@ def get_snp_research(variant_id: Optional[str] = None):
         - **JSONResponse**: Containing SNP research data.
     """
     return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, variant_id=variant_id))
+
+# Chromosomes
+@router.post("/fetch_chromosomes")
+def get_chromosomes(): 
+    server = "https://grch37.rest.ensembl.org"
+    ext = "/info/assembly/homo_sapiens?"
+    
+    r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
+    
+    if not r.ok:
+        r.raise_for_status()
+        sys.exit()
+        
+    decoded = r.json()
+    return repr(decoded)
+
+# Fetch Patient Data
 
 @router.get("/patient_profile")
 def get_patient_genome_data(patient_id: Optional[str] = None):

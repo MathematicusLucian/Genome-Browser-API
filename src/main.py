@@ -1,6 +1,8 @@
+import json
 from fastapi import FastAPI
 import uvicorn
 from routes import router
+from gprofiler import GProfiler
 
 # Routing
 app = FastAPI(
@@ -17,5 +19,13 @@ app.redoc_url = "/redoc"
 
 # MAIN
 if __name__ == "__main__":
-    # python -m uvicorn main:app --reload
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
+    gp = GProfiler(return_dataframe=True)
+    data = gp.snpense(query=['rs11734132'])
+    print(data['gene_names'])
+
+    gp = GProfiler(return_dataframe=True)
+    data = gp.convert(organism='hsapiens', query='*')
+    print(data)
+
+    # uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

@@ -120,6 +120,16 @@ class GenomeDatabase(object):
             FROM snp_pairs
         '''
         return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
+    
+    def fetch_genes_in_genome(self, offset=0, **kwargs): 
+        columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
+        columns = self.sql_worker.execute(columns_query)
+        columns = list(itertools.chain.from_iterable(columns))
+        base_query = '''
+            SELECT genes 
+            FROM snp_pairs
+        ''' # group by gene
+        return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
 
     # List of All Patients
 

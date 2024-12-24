@@ -101,6 +101,32 @@ Test Cases:
 
 [SNPedia: Lily Mendel](https://www.snpedia.com/index.php/User:Lilly_Mendel)
 
+**Chromosomes**:
+Chromosome 1
+Chromosome 2
+Chromosome 3
+Chromosome 4
+Chromosome 5
+Chromosome 6
+Chromosome 7
+Chromosome 8
+Chromosome 9
+Chromosome 10
+Chromosome 11
+Chromosome 12
+Chromosome 13
+Chromosome 14
+Chromosome 15
+Chromosome 16
+Chromosome 17
+Chromosome 18
+Chromosome 19
+Chromosome 20
+Chromosome 21
+Chromosome 22
+X Chromosome
+Y Chromosome
+
 ### SNP Pairs Data
 
 The major/minor alleles of gene variants, their associated gene, chromosome position, etc..
