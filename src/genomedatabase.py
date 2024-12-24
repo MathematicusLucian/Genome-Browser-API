@@ -139,25 +139,54 @@ class GenomeDatabase(object):
         return self.sql_worker.execute(base_query, tuple(params))
     
     # Individual Patient Genotype Datasets
-
+    
     def fetch_patient_data_genotypes(self, offset=0, **kwargs):
+        # base_query = '''SELECT DISTINCT m.name || '.' || ii.name AS 'indexed-columns'
+        #     FROM sqlite_schema AS m,
+        #         pragma_index_list(m.name) AS il,
+        #         pragma_index_info(il.name) AS ii
+        #     WHERE m.type='table'
+        #     ORDER BY 1
+        # '''
         base_query = '''
-            SELECT *
+            SELECT * 
             FROM patient_genome_data
         '''
-        conditions = []
-        params = []
-        if 'patient_id' in kwargs:
-            conditions.append('patient_id = ?')
-            params.append(kwargs['patient_id'])
-        if 'variant_id' in kwargs:
-            conditions.append('rsid = ?')
-            params.append(kwargs['variant_id'])
-        if conditions:
-            base_query += ' WHERE ' + ' AND '.join(conditions)
-        base_query += ' LIMIT 25 OFFSET ?'
-        params.append(offset)
-        return self.sql_worker.execute(base_query, tuple(params)) 
+        # SELECT * FROM pragma_index_info('patient_genome_data')
+        # PRAGMA index_info('patient_genome_data')
+
+        # conditions = []
+        # params = []
+        # if 'patient_id' in kwargs:
+        #     conditions.append('patient_id = ?')
+        #     params.append(kwargs['patient_id'])
+        # if 'variant_id' in kwargs:
+        #     conditions.append('rsid = ?')
+        #     params.append(kwargs['variant_id'])
+        # if conditions:
+        #     base_query += ' WHERE ' + ' AND '.join(conditions)
+        # base_query += ' LIMIT 25 OFFSET ?'
+        # params.append(offset)
+        
+        # Execute the query and fetch the results
+        # result = self.sql_worker.execute(base_query, tuple(params))
+        result = self.sql_worker.execute(base_query)
+        return result
+    
+    # def fetch_patient_genome_data_columns(self):
+    #     query = 'PRAGMA table_info(patient_genome_data)'
+    #     columns_info = self.sql_worker.execute(query)
+    #     columns = [col[1] for col in columns_info]
+    #     return columns
+        
+        # # Retrieve column names from the table schema
+        # column_query = 'PRAGMA table_info(patient_genome_data)'
+        # columns_info = self.sql_worker.execute(column_query)
+        # columns = [col[1] for col in columns_info]
+        
+        # # Combine column names with the result data
+        # data = [dict(zip(columns, row)) for row in result]
+        # return data
         
     # Individual Patient Data by Genotype
 
@@ -175,8 +204,8 @@ class GenomeDatabase(object):
     def fetch_joined_patient_data(self, offset=0, **kwargs):
         base_query = '''
             SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
-                    sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2,
-                    (pgd.genotype = sp.allele1 || sp.allele2 OR pgd.genotype = sp.allele2 || sp.allele1) AS genotype_match
+                   sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2,
+                   (pgd.genotype = sp.allele1 || sp.allele2 OR pgd.genotype = sp.allele2 || sp.allele1) AS genotype_match
             FROM patients p
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
             JOIN snp_pairs sp ON pgd.rsid = sp.rsid
@@ -193,7 +222,10 @@ class GenomeDatabase(object):
             base_query += ' WHERE ' + ' AND '.join(conditions)
         base_query += ' LIMIT 25 OFFSET ?'
         params.append(offset)
-        return self.sql_worker.execute(base_query, tuple(params))
+        result = self.sql_worker.execute(base_query, tuple(params))
+        columns = [desc[0] for desc in self.sql_worker.cursor.description]
+        data = [dict(zip(columns, row)) for row in result]
+        return data
     
     # Patient Data plus SNP Matches
  

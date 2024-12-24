@@ -17,7 +17,7 @@ Comparison of ancestry website DNA report with SNPedia data. The major/minor all
 
 **Launch the FastAPI server locally**
 
-`python3 src/main.py`
+`python3 src/main.py` (effectively, unvicorn implementation within is: `python -m uvicorn main:app --reload`)
 
 In your browser, open `http://127.0.0.1:8000/`
 
