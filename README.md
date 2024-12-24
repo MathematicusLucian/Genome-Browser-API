@@ -116,13 +116,19 @@ There are several options:
    pip install -r requirements.txt
    ```
 
-   The `requirements.txt` file has dependencies to install:
+   The `requirements.txt` file has dependencies to install (it was generated with the command `pipreqs src/  --force --ignore=tests`):
 
    - Python 3.8+
    - FastAPI
    - Uvicorn
    - Pydantic
    - SQLite3
+
+   For the tests, the following depdendencies are required:
+
+   - mock==5.1.0
+   - pandas==2.2.3
+   - pytest==8.3.4
 
 3. Set up the environment variables:
 
