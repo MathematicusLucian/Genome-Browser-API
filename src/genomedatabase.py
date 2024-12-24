@@ -8,9 +8,10 @@ class GenomeDatabase(object):
     __db_path = None
     sql_worker = ':memory:'
 
-    def __init__(self):
-        self.__db_path = "./data/genomes/genome.db" 
+    def __init__(self, db_path):
+        self.__db_path = db_path
         self.sql_worker = Sqlite3Worker(self.__db_path) 
+        self.create_tables()
 
     def create_tables(self):
         self.sql_worker.execute('''
@@ -169,15 +170,13 @@ class GenomeDatabase(object):
     # Individual Patient Data Expanded (Featuring Their Genotypes)
     
     def fetch_patient_data_expanded(self, offset=0, **kwargs): 
-        columns = ['patient_id', 'patient_name', 'rsid', 'chromosome', 'position', 'genotype',
-               'rsid_genotypes', 'magnitude', 'risk', 'notes', 'allele1', 'allele2', 'genotype_match']
+        columns = ['patient_id', 'patient_name', 'rsid', 'chromosome', 'position', 'genotype']
         base_query = '''
-            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype,
-                   sp.rsid_genotypes, sp.magnitude, sp.risk, sp.notes, sp.allele1, sp.allele2,
-                   (pgd.genotype = sp.allele1 || sp.allele2 OR pgd.genotype = sp.allele2 || sp.allele1) AS genotype_match
+            SELECT p.patient_id, p.patient_name, pgd.rsid, pgd.chromosome, pgd.position, pgd.genotype
             FROM patients p
             JOIN patient_genome_data pgd ON p.patient_id = pgd.patient_id
-            JOIN snp_pairs sp ON pgd.rsid = sp.rsid
+            WHERE pgd.patient_id = ? AND pgd.rsid = ?
+            LIMIT 25 OFFSET ?
         '''
         return self._fetch_data_with_conditions(base_query, columns, offset, **kwargs)
     

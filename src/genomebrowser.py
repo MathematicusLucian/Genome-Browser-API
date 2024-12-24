@@ -1,10 +1,13 @@
 import logging
+import os
 from venv import logger
 from annotated_types import T
+from dotenv import load_dotenv
 import pandas as pd
-import uuid
-import genomedatabase
+import uuid 
 from utils import load_file, check_if_default
+
+load_dotenv()
 
 def load_data(filename_with_path, names, straight=False):
     if(filename_with_path is not None):
@@ -15,12 +18,11 @@ def load_data(filename_with_path, names, straight=False):
 class GenomeBrowser(object):
     patient_genome_df = pd.DataFrame() | None
     snp_pairs_df = pd.DataFrame() | None
-    genome_database = genomedatabase.GenomeDatabase()  
+    genome_database = None
     default_genome_file_name_with_path = None
 
     def __init__(self, snp_pairs_file_name_with_path=None, default_genome_file_name_with_path=None, genome_database=None):
         self.genome_database = genome_database
-        self.genome_database.create_tables()
         self.default_genome_file_name_with_path = default_genome_file_name_with_path
         if snp_pairs_file_name_with_path is not None:
             self.load_snp_pairs_df(snp_pairs_file_name_with_path)

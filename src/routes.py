@@ -10,6 +10,7 @@ import threading
 import asyncio
 from genomebrowser import GenomeBrowser
 from genomedatabase import GenomeDatabase
+load_dotenv()
 
 def custom_openapi():
     if router.openapi_schema:
@@ -34,9 +35,9 @@ def custom_openapi():
     router.openapi_schema = openapi_schema
     return router.openapi_schema
 
-load_dotenv()
 snp_pairs_file_name_with_path = os.getenv('SNP_PAIRS_FILE_PATH')
 default_genome_file_name_with_path = os.getenv('GENOME_FILE_PATH')
+db_path = os.getenv('SQLITE_DATABASE_PATH')
 
 websocket_url = "ws://localhost:8000/ws"
 
@@ -60,7 +61,7 @@ router.openapi = custom_openapi
 genome_browser = GenomeBrowser(
     snp_pairs_file_name_with_path=snp_pairs_file_name_with_path,
     default_genome_file_name_with_path=default_genome_file_name_with_path,
-    genome_database=GenomeDatabase()
+    genome_database=GenomeDatabase(db_path=db_path)
 ) 
 
 # root
