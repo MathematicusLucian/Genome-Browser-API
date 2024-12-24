@@ -1,5 +1,4 @@
 import os
-from tkinter import N
 from dotenv import load_dotenv
 from typing import Any, Callable, Optional
 from fastapi import APIRouter, Depends, WebSocketDisconnect
@@ -7,14 +6,17 @@ from fastapi.params import Query
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.websockets import WebSocket
 from fastapi.openapi.utils import get_openapi
-import threading
-import asyncio
-import requests, sys
-import json
-from gprofiler import GProfiler
-from genomebrowser import GenomeBrowser
-from genomedatabase import GenomeDatabase
+import threading 
+from controllers.genome_controller import GenomeController
+from controllers.websocket_controller import WebSocketController
+from services.genome_service import GenomeService
+from services.websocket_service import WebSocketService
+
 load_dotenv()
+
+router = APIRouter()
+genome_service = GenomeService()
+websocket_service = WebSocketService()
 
 def custom_openapi():
     if router.openapi_schema:
@@ -39,34 +41,7 @@ def custom_openapi():
     router.openapi_schema = openapi_schema
     return router.openapi_schema
 
-snp_pairs_file_name_with_path = os.getenv('SNP_PAIRS_FILE_PATH')
-default_genome_file_name_with_path = os.getenv('GENOME_FILE_PATH')
-db_path = os.getenv('SQLITE_DATABASE_PATH')
-
-websocket_url = "ws://localhost:8000/ws"
-
-async def notify_ui(genome_file_name_with_path: str):
-    async with WebSocket(websocket_url, headers=None, subprotocols=None) as websocket:
-        await websocket.send_json({"event": "genome_loaded", "genome_file_name_with_path": genome_file_name_with_path, "Number of Rows": genome_browser.patient_genome_df.size})
-
-def load_genome_background(genome_file_name_with_path: Optional[str] = None):
-    if genome_file_name_with_path is None: genome_file_name_with_path = "default"
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    future = loop.run_in_executor(None, genome_browser.load_genome, genome_file_name_with_path)
-    loop.run_until_complete(future)
-    # Notify UI or log the completion
-    loop.run_until_complete(notify_ui(genome_file_name_with_path))
-    loop.close()
-    
-router = APIRouter()
 router.openapi = custom_openapi
-
-genome_browser = GenomeBrowser(
-    snp_pairs_file_name_with_path=snp_pairs_file_name_with_path,
-    default_genome_file_name_with_path=default_genome_file_name_with_path,
-    genome_database=GenomeDatabase(db_path=db_path)
-) 
 
 # root
 
@@ -94,7 +69,7 @@ def load_genome(genome_file_name_with_path: Optional[str] = Query(None)):
         Returns:
         - **JSONResponse**: Indicating that genome loading has commenced and the path to the genome file.
     """
-    threading.Thread(target=load_genome_background, args=(genome_file_name_with_path,)).start()
+    threading.Thread(target=genome_service.load_genome_background, args=(genome_file_name_with_path,)).start()
     return JSONResponse(content={"message": "Genome loading commenced", "genome_file_name_with_path": genome_file_name_with_path})
 
 # Notify UI or log the completion of data loading activity
@@ -105,15 +80,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
         - **Websocket**: The WebSocket connection instance.
     """
-    await websocket.accept()
-    try:
-        while True:
-            data = await websocket.receive_text()
-            await websocket.send_text(f"Message received: {data}")
-    except WebSocketDisconnect:
-        print("WebSocket connection closed")
-    except Exception as e:
-        print(f"WebSocket connection closed: {e}")
+    await websocket_service.websocket_endpoint(websocket)
 
 # List of All Patients
 
@@ -127,12 +94,8 @@ def get_full_report():
         Returns:
         - **JSONResponse**: A response object containing the full report in JSON format.
     """
-    full_report = genome_browser.fetch_patients()
+    full_report = genome_service.fetch_patients()
     return JSONResponse(content=full_report)
-
-def fetch_data(fetch_method: Callable, **kwargs) -> Any:
-    filtered_kwargs = {k: v for k, v in kwargs.items() if v is not None and v != ""}
-    return fetch_method(**filtered_kwargs)
 
 # General Human Genome
 
@@ -146,7 +109,7 @@ def get_snp_research(variant_id: Optional[str] = None):
         Returns:
         - **JSONResponse**: Containing SNP research data.
     """
-    return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, variant_id=variant_id))
+    return JSONResponse(content=genome_service.fetch_all_snp_pairs(variant_id=variant_id))
 
 # Chromosomes
 @router.get("/fetch_chromosomes/ensembl")
@@ -157,17 +120,7 @@ def get_list_of_chromosomes_from_ensembl_api():
         Returns:
         - **JSONResponse**: Containing the list of chromosomes.
     """
-    server = "https://grch37.rest.ensembl.org"
-    ext = "/info/assembly/homo_sapiens?"
-    
-    r = requests.get(server+ext, headers={ "Content-Type" : "application/json"})
-    
-    if not r.ok:
-        r.raise_for_status()
-        sys.exit()
-        
-    decoded = r.json()
-    return repr(decoded)
+    return JSONResponse(content=genome_service.fetch_chromosomes_from_ensembl())
 
 @router.get("/fetch_chromosomes/gprofiler")
 def get_list_of_chromosomes_from_gprofiler_api(): 
@@ -177,10 +130,7 @@ def get_list_of_chromosomes_from_gprofiler_api():
         Returns:
         - **JSONResponse**: Containing the list of chromosomes.
     """
-    organism = 'hsapiens'
-    gp = GProfiler(return_dataframe=True)
-    data = gp.convert(organism=organism, query='*')
-    return data
+    return JSONResponse(content=genome_service.fetch_chromosomes_from_gprofiler())
 
 @router.get("/fetch_gene_by_variant")
 def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[str] = None):
@@ -192,10 +142,7 @@ def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[
         Returns:
         - **JSONResponse**: Containing the details of the gene matching the variant RSID.
     """
-    if variant_id == None: variant_id = "rs11734132"
-    gp = GProfiler(return_dataframe=True)
-    data = gp.snpense(query=[variant_id])
-    return data['gene_names']
+    return JSONResponse(content=genome_service.fetch_gene_data_by_variant(variant_id))
 
 # Fetch Patient Data
 
@@ -209,7 +156,7 @@ def get_patient_genome_data(patient_id: Optional[str] = None):
         Returns:
         - **JSONResponse**: Containing the patient's genome data.
     """
-    return JSONResponse(content=fetch_data(fetch_method=genome_browser.fetch_patient_profile, patient_id=patient_id))
+    return JSONResponse(content=genome_service.fetch_patient_profile(patient_id))
 
 @router.get("/patient_genome_data")
 def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
@@ -222,7 +169,7 @@ def get_patient_genome_data(patient_id: Optional[str] = None, variant_id: Option
         Returns:
         - **JSONResponse**: Containing the genome data.
     """
-    return JSONResponse(content=fetch_data(fetch_method=genome_browser.fetch_patient_genome_data, patient_id=patient_id, variant_id=variant_id))
+    return JSONResponse(content=genome_service.fetch_patient_genome_data(patient_id, variant_id))
 
 @router.get("/patient_genome_data/expanded")
 def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
@@ -232,7 +179,7 @@ def get_patient_genome_data_expanded(patient_id: Optional[str] = None, variant_i
         - **patient_id**: An optional ID of the patient whose genome data is to be retrieved.
         - **variant_id**: An optional ID of the variant to filter the genome data.
     """
-    return JSONResponse(content=fetch_data(genome_browser.fetch_patient_data_expanded, patient_id=patient_id, variant_id=variant_id))
+    return JSONResponse(content=genome_service.fetch_patient_data_expanded(patient_id, variant_id))
 
 @router.get("/full_report")
 def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] = None):
@@ -245,4 +192,4 @@ def get_full_report(patient_id: Optional[str] = None, variant_id: Optional[str] 
         Returns:
         - **JSONResponse**: Containing the full report data.
     """
-    return JSONResponse(content=fetch_data(genome_browser.fetch_full_report, patient_id=patient_id, variant_id=variant_id))
+    return JSONResponse(content=genome_service.fetch_full_report(patient_id, variant_id))
