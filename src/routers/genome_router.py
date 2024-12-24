@@ -28,7 +28,7 @@ def load_genome(genome_file_name_with_path: Optional[str] = Query(None)):
 # List of All Patients
 
 @genome_router.get("/patients")
-def get_full_report():
+def fetch_patients():
     """
         Retrieve the full report of patients.
 
@@ -37,7 +37,7 @@ def get_full_report():
         Returns:
         - **JSONResponse**: A response object containing the full report in JSON format.
     """
-    return genome_controller.get_full_report()
+    return genome_controller.fetch_patients()
 
 # General Human Genome
 

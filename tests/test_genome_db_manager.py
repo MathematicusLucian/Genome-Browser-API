@@ -8,11 +8,11 @@ try:
     from unittest.mock import patch
 except ImportError:
     from mock import patch
-from genome_db_manager import GenomeDatabase
+from data_layer.genome_db_manager import GenomeDatabaseManager
 
 @pytest.fixture
 def genome_db():
-    db = GenomeDatabase()
+    db = GenomeDatabaseManager()
     db.create_tables()
     yield db
     db.close_connection()

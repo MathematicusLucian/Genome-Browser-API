@@ -12,7 +12,7 @@ class GenomeController:
         threading.Thread(target=self.genome_router.load_genome_background, args=(genome_file_name_with_path,)).start()
         return JSONResponse(content={"message": "Genome loading commenced", "genome_file_name_with_path": genome_file_name_with_path})
 
-    def get_full_report(self):
+    def fetch_patients(self):
         full_report = self.genome_service.fetch_patients()
         return JSONResponse(content=full_report)
 

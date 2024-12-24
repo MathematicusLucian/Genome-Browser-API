@@ -1,6 +1,6 @@
 from repositories.genome_repository import GenomeRepository
 
-class GenomeDatabase:
+class GenomeDatabaseManager:
     def __init__(self, db_path):
         self.repository = GenomeRepository(db_path)
 
@@ -36,3 +36,9 @@ class GenomeDatabase:
 
     def fetch_patient_genome_data(self, offset=0, **kwargs):
         return self.repository.fetch_patient_genome_data(offset, **kwargs)
+
+    def fetch_patient_data_expanded(self, offset=0, **kwargs):
+        return self.repository.fetch_patient_data_expanded(offset, **kwargs)
+
+    def fetch_full_report(self, offset=0, **kwargs):
+        return self.repository.fetch_full_report(offset, **kwargs)

@@ -40,7 +40,7 @@ The Genome Browser API is a **FastAPI**-based (Python) server application (with 
 
    - Handles direct interactions with the database. It performs CRUD operations and returns data to the service layer.
    - Created `repositories/genome_repository.py` to handle database interactions.
-   - Moved database interaction logic from `genomedatabase.py` to the repository.
+   - Moved database interaction logic from `GenomeDatabaseManager.py` to the repository.
    - This follows the Repository Pattern, which abstracts the data access logic and provides a clean API for the domain layer.
 
 4. **Models**:
