@@ -149,8 +149,14 @@ def get_snp_research(variant_id: Optional[str] = None):
     return JSONResponse(content=fetch_data(genome_browser.fetch_all_snp_pairs, variant_id=variant_id))
 
 # Chromosomes
-@router.post("/fetch_chromosomes/ensembl")
-def get_chromosomes(): 
+@router.get("/fetch_chromosomes/ensembl")
+def get_list_of_chromosomes_from_ensembl_api(): 
+    """
+        Fetch the list of chromosomes from the Ensembl API.
+
+        Returns:
+        - **JSONResponse**: Containing the list of chromosomes.
+    """
     server = "https://grch37.rest.ensembl.org"
     ext = "/info/assembly/homo_sapiens?"
     
@@ -163,15 +169,29 @@ def get_chromosomes():
     decoded = r.json()
     return repr(decoded)
 
-@router.post("/fetch_chromosomes/gprofiler")
-def get_chromosomes(): 
+@router.get("/fetch_chromosomes/gprofiler")
+def get_list_of_chromosomes_from_gprofiler_api(): 
+    """
+        Fetch the list of chromosomes from the g:Profiler API.
+
+        Returns:
+        - **JSONResponse**: Containing the list of chromosomes.
+    """
     organism = 'hsapiens'
     gp = GProfiler(return_dataframe=True)
     data = gp.convert(organism=organism, query='*')
     return data
 
-@router.post("/fetch_gene_by_variant")
-def get_chromosomes(variant_id: Optional[str] = None):
+@router.get("/fetch_gene_by_variant")
+def get_from_gprofiler_api_gene_data_matching_variant_rsid(variant_id: Optional[str] = None):
+    """
+        Fetch gene data matching a variant RSID from the g:Profiler API.
+
+        - **variant_id**: Optional; The RSID of the variant to fetch gene data for. (The fallback is 'rs11734132'.")
+
+        Returns:
+        - **JSONResponse**: Containing the details of the gene matching the variant RSID.
+    """
     if variant_id == None: variant_id = "rs11734132"
     gp = GProfiler(return_dataframe=True)
     data = gp.snpense(query=[variant_id])
