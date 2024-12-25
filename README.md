@@ -1,8 +1,10 @@
-# Genome-Browser-API
+# Genome-Browser-API 🔬🧬
 
 ## Overview
 
 The Genome Browser API is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
+
+(The UI for this project is here: [Genome Browser UI](https://github.com/MathematicusLucian/Genome-Browser-UI))
 
 ![Swagger](./assets/endpoints_swagger.png)
 
