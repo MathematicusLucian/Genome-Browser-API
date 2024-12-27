@@ -2,9 +2,13 @@
 
 ## Overview
 
-The Genome Browser API is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
+The Genome Browser scans/analyses DNA files from popular family tree providers (23andMe, Ancestry.com, etc.), comparing the genome of the user with published literature on health risks/conditions that their gene variants are correlated to. SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
 
-(The UI for this project is here: [Genome Browser UI](https://github.com/MathematicusLucian/Genome-Browser-UI))
+For security reasons, the user's patient data is not shared to the server, but remains on their machine (in the web browser **IndexedDB**.)
+
+- This repo is the Genome Browser API/Orchestrator is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
+
+- (The UI for **React**-based (TypeScript) UI client application (with **NextJs**), and which queries the Genome Browser API is here: [Genome Browser UI](https://github.com/MathematicusLucian/Genome-Browser-UI))
 
 ![Swagger](./assets/endpoints_swagger.png)
 
