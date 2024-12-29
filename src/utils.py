@@ -29,25 +29,29 @@ def fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution
     if 'patient_id' in kwargs and kwargs['patient_id'] is not None:
         conditions.append(f'{patient_id_column} = ?')
         params.append(kwargs['patient_id'])
-    if 'rsid' in kwargs and kwargs['rsid'] is not None:
-        print(kwargs['rsid'])
-        if(type(kwargs['rsid'] == list)):
-            print('list')
-            conditions.append(f'{rsid_column} IN ?')
-        else:
-            conditions.append(f'{rsid_column} = ?')
-        params.append(kwargs['rsid'])
     if 'allele1' in kwargs and kwargs['allele1'] is not None:
         conditions.append(f'{allele1_column} = ?')
         params.append(kwargs['allele1'])
     if 'allele2' in kwargs and kwargs['allele2'] is not None:
         conditions.append(f'{allele2_column} = ?')
         params.append(kwargs['allele2']) 
+    if 'rsid' in kwargs and kwargs['rsid'] is not None:
+        print(kwargs['rsid'])
+        if(type(kwargs['rsid'] == list)):
+            print('list')
+            rsids = "('"+"','".join(kwargs['rsid'])+"')"
+            base_query += f' WHERE rsid IN {rsids} ' 
+            base_query += f' LIMIT 25 OFFSET {offset}' 
+        else:
+            conditions.append(f'{rsid_column} = ?')
+        params.append(kwargs['rsid'])
     if conditions:
         base_query += ' WHERE ' + ' AND '.join(conditions)
-    base_query += ' LIMIT 25 OFFSET ?'
-    params.append(offset)
-    results_list = sql_worker_execution_function(base_query, tuple(params))
+        base_query += ' LIMIT 25 OFFSET ?'
+        params.append(offset)
+        results_list = sql_worker_execution_function(base_query, tuple(params))
+    else:
+        results_list = sql_worker_execution_function(base_query) 
     results_list = pd.DataFrame(results_list, columns=columns)
     json_str = results_list.to_json(orient='records', date_format='iso')
     return json.loads(json_str) 
