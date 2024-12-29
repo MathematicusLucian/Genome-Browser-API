@@ -7,6 +7,7 @@ data/*
 !data/genomes
 data/genomes/*
 !data/genomes/genome_Lilly_Mendel_v4.txt
+!data/genomes/genome_demo_file.txt
 
 # Database
 *.db
