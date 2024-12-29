@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from fastapi import Query
 from fastapi.responses import JSONResponse
 import threading
@@ -12,7 +12,7 @@ class GenomeController:
         threading.Thread(target=self.genome_router.load_genome_background, args=(genome_file_name_with_path,)).start()
         return JSONResponse(content={"message": "Genome loading commenced", "genome_file_name_with_path": genome_file_name_with_path})
 
-    def get_snp_research(self, rsid: Optional[str] = None):
+    def get_snp_research(self, rsid: Optional[list[Any]] = None):
         return JSONResponse(content=self.genome_service.fetch_all_snp_pairs(rsid=rsid))
     
     def get_snp_pairs_data_by_genotype(self, rsid: Optional[str] = None, allele1: Optional[str] = None, allele2: Optional[str] = None):

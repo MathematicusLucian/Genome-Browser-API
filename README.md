@@ -18,7 +18,15 @@ For security reasons, the user's patient data is not shared to the server, but r
 
 2. **Long-term**: Cronjob to trigger Python script to download and parse weekly [VCF](./assets/VCFv4.1.pdf) releases of CIViC and ClinVar data, and upload such to a Postgres database. Separate tables will be generated for genome builds [GRCh37](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.13/) and [GRCh38](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.26/) (Genome Reference Consortium Human genome builds 37, and 38; also known as hg38; these builds relate to the [1000 genome project](https://www.internationalgenome.org/human-genome-structural-variation-consortium/)), as well as for mono-allelic variants and complex multi-allelic variants. Rhe tables will be augmented with allele frequencies from the ExAC and gnomAD datasets as these are often consulted when analyzing ClinVar variants.
 
-   ![chromosomes.png](./assets/chromosomes.png)
+## Data
+
+- [Genome assembly GRCh38.p14](https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000001405.40/) (Taxon: Homo sapiens (human); Synonym: hg38; Assembly type: Haploid with alt loci; Genes: 59,715; Chromosomes: 1 to 22, X, Y, and mT.)
+
+- NIH dbSNP gene details pages: `https://www.ncbi.nlm.nih.gov/snp/[rsid]`
+
+**\* Chromosomes**
+
+![chromosomes.png](./assets/chromosomes.png)
 
 3. This also serves to demonstrate:
 

@@ -30,7 +30,12 @@ def fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution
         conditions.append(f'{patient_id_column} = ?')
         params.append(kwargs['patient_id'])
     if 'rsid' in kwargs and kwargs['rsid'] is not None:
-        conditions.append(f'{rsid_column} = ?')
+        print(kwargs['rsid'])
+        if(type(kwargs['rsid'] == list)):
+            print('list')
+            conditions.append(f'{rsid_column} IN ?')
+        else:
+            conditions.append(f'{rsid_column} = ?')
         params.append(kwargs['rsid'])
     if 'allele1' in kwargs and kwargs['allele1'] is not None:
         conditions.append(f'{allele1_column} = ?')

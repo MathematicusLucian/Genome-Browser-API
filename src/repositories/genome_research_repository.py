@@ -58,12 +58,34 @@ class GenomeResearchRepository:
         columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
         columns = self.sql_worker.execute(columns_query)
         columns = list(itertools.chain.from_iterable(columns))
-        base_query = '''
+        rsids = "'"+"','".join(kwargs['rsid'])+"'"
+        base_query = f'''
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
-            FROM snp_pairs
-        '''
+            FROM snp_pairs 
+            WHERE rsid IN ({rsids})
+        ''' 
+        print(base_query) 
         sql_worker_execution_function = self.sql_worker.execute
-        return fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution_function, **kwargs)
+        # # # return fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution_function, **kwargs)
+        # # # base_query += ' WHERE rsid IN ? '
+        # # # base_query += ' LIMIT 25 OFFSET ?'
+        base_query += ' LIMIT 25 OFFSET 0'
+        # # params = [rsids_formatted_for_query]
+        # # print(params)
+        # # # params = ['Rs1000113', 0]
+        # # # params.append(offset)
+        # # conditions = []
+        # # rsid_column = 'rsid'
+        # # conditions.append(f'{rsid_column} IN ?')
+        # # print(conditions)
+        # # if conditions:
+        # #     base_query += ' WHERE ' + ' AND '.join(conditions)
+        # #     print(base_query)
+        results_list = sql_worker_execution_function(base_query)
+        # # results_list = sql_worker_execution_function(base_query, tuple(params))
+        results_list = pd.DataFrame(results_list, columns=columns)
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str) 
     
     def fetch_genes_in_genome(self, offset=0, **kwargs): 
         columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''

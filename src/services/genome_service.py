@@ -109,7 +109,7 @@ class GenomeService:
         else:
             raise TypeError("No SNP data loaded.")
     
-    def fetch_all_snp_pairs(self, **kwargs): 
+    def fetch_all_snp_pairs(self, **kwargs):  
         column_name = 'rsid'
         if 'offset' not in kwargs: kwargs['offset'] = 0
         kwargs['rsid'] = check_if_default(kwargs.get('rsid')) if kwargs.get('rsid') else None
