@@ -13,7 +13,7 @@ genome_controller = GenomeController()
 
 # Data from published genome research, e.g. SNP Pairs for gene variants
 
-@snp_research_router.post("/snp_research")
+@snp_research_router.post("/")
 def get_snp_research(rsid: Optional[list[str]] = None):
     """
         Retrieve SNP research data.
@@ -26,8 +26,8 @@ def get_snp_research(rsid: Optional[list[str]] = None):
     return genome_controller.get_snp_research(rsid)
 
 # E.g Body:
-# [ "rs1000113", "rs1000597" ]
-@snp_research_router.get("/snp_research/by-genotype")
+# ["rs1000113", "rs1000597" ]
+@snp_research_router.get("/by-genotype")
 def get_snp_pairs_data_by_genotype(rsid: Optional[str] = None, allele1: Optional[str] = None, allele2: Optional[str] = None):
     """
         Retrieve SNP research data.
