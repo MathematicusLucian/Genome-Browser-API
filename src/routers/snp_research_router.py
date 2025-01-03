@@ -1,9 +1,9 @@
 from dotenv import load_dotenv
-from typing import Any, Optional
-from fastapi import APIRouter
+from typing import Any, List, Optional
+from fastapi import APIRouter, HTTPException
 from fastapi.params import Query
 from fastapi.responses import JSONResponse
-import threading  
+from pydantic import BaseModel  
 from controllers.genome_controller import GenomeController
 
 load_dotenv()
@@ -11,18 +11,36 @@ load_dotenv()
 snp_research_router = APIRouter() 
 genome_controller = GenomeController()
 
+class RsidsPayload(BaseModel):
+    rsidsList: List[str]  # Define the expected structure of the payload
+
+def is_list_of_strings(variable) -> bool:
+    if not isinstance(variable, list):
+        return False
+    return all(isinstance(item, str) for item in variable)
+
 # Data from published genome research, e.g. SNP Pairs for gene variants
-
 @snp_research_router.post("/")
-def get_snp_research(rsid: Optional[list[str]] = None):
+async def get_snp_research(payload: RsidsPayload):
     """
-        Retrieve SNP research data.
+    Retrieve SNP research data.
 
-        - **rsid**: An optional string representing the variant ID.
+    - **rsidsList**: A list of strings representing variant IDs.
 
-        Returns:
-        - **JSONResponse**: Containing SNP research data.
+    Returns:
+    - **JSONResponse**: Containing SNP research data.
     """
+    rsid = payload.rsidsList  # Extract the rsidsList field
+    print('Received rsid:', rsid)
+
+    # Validate the list length
+    if len(rsid) < 1 or len(rsid) > 10:
+        raise HTTPException(
+            status_code=400,
+            detail="The rsidsList must contain between 1 and 10 items."
+        )
+    
+    # Call the genome controller to get the SNP research data
     return genome_controller.get_snp_research(rsid)
 
 # E.g Body:
