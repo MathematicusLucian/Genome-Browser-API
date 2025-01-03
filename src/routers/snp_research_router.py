@@ -33,7 +33,7 @@ async def get_snp_research(payload: RsidsPayload):
     """
     # try:
     #     # Parse the corrected JSON
-    #     print("Parsed payload:", payload)
+    print("Parsed payload:", payload)
     #     # # Validate against the Pydantic model
     #     # validated_payload = RsidsPayload(**payload)
     #     # print("Validated payload:", validated_payload)

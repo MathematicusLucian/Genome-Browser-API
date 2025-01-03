@@ -55,28 +55,35 @@ class GenomeResearchRepository:
     # READ (Fetch/Select) 
 
     def fetch_snp_pairs_data(self, offset=0, **kwargs): 
+        # Get column names dynamically
         columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
         columns = self.sql_worker.execute(columns_query)
         print('columns', columns)   
         columns = list(itertools.chain.from_iterable(columns))
-        # base_query = '''
-        #     SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
-        #     FROM snp_pairs 
-        # '''  
-        # Construct the query dynamically with parameter substitution
-        rsids = kwargs.get('rsid') # kwargs['rsid']
-        print('rsids', rsids)   
-        # rsids = ['rs1064793444', 'rs1064793273', 'rs1064793267']
-        placeholders = ', '.join('?' for _ in rsids)
-        results_list = self.sql_worker.execute(f"""
+
+        # Retrieve the rsids from kwargs
+        rsids = kwargs.get('rsid')
+        if not rsids or not isinstance(rsids, list):
+            raise ValueError("rsid must be a list of strings")
+
+        print('rsids', rsids)
+
+        # Construct the query dynamically with parameter placeholders
+        placeholders = ', '.join(['?'] * len(rsids))  # Generate ?, ?, ? based on the number of rsids
+        query = f"""
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
             FROM snp_pairs
-            WHERE rsid IN {tuple(rsids)}
-        """)
+            WHERE rsid IN ({placeholders})
+        """
+
+        # Execute the query with parameter substitution
+        results_list = self.sql_worker.execute(query, rsids)
         print('results_list', results_list)
+
+        # Convert the results to a DataFrame and then to JSON
         results_list = pd.DataFrame(results_list, columns=columns)
         json_str = results_list.to_json(orient='records', date_format='iso')
-        return json.loads(json_str) 
+        return json.loads(json_str)
     
     def fetch_genes_in_genome(self, offset=0, **kwargs): 
         columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
