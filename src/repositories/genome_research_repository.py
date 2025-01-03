@@ -57,13 +57,26 @@ class GenomeResearchRepository:
     def fetch_snp_pairs_data(self, offset=0, **kwargs): 
         columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
         columns = self.sql_worker.execute(columns_query)
+        print('columns', columns)   
         columns = list(itertools.chain.from_iterable(columns))
-        base_query = '''
+        # base_query = '''
+        #     SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
+        #     FROM snp_pairs 
+        # '''  
+        # Construct the query dynamically with parameter substitution
+        rsids = kwargs.get('rsid') # kwargs['rsid']
+        print('rsids', rsids)   
+        # rsids = ['rs1064793444', 'rs1064793273', 'rs1064793267']
+        placeholders = ', '.join('?' for _ in rsids)
+        results_list = self.sql_worker.execute(f"""
             SELECT rsid_genotypes, magnitude, risk, notes, rsid, allele1, allele2
-            FROM snp_pairs 
-        '''  
-        sql_worker_execution_function = self.sql_worker.execute
-        return fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution_function, **kwargs)
+            FROM snp_pairs
+            WHERE rsid IN {tuple(rsids)}
+        """)
+        print('results_list', results_list)
+        results_list = pd.DataFrame(results_list, columns=columns)
+        json_str = results_list.to_json(orient='records', date_format='iso')
+        return json.loads(json_str) 
     
     def fetch_genes_in_genome(self, offset=0, **kwargs): 
         columns_query = '''SELECT name FROM pragma_table_info('snp_pairs')'''
@@ -75,5 +88,3 @@ class GenomeResearchRepository:
         ''' 
         sql_worker_execution_function = self.sql_worker.execute
         return fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution_function, **kwargs)
- 
-            # WHERE rsid IN ({rsids})

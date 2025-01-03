@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from typing import Any, List, Optional
-from fastapi import APIRouter, HTTPException
+import json
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel  
@@ -30,18 +31,37 @@ async def get_snp_research(payload: RsidsPayload):
     Returns:
     - **JSONResponse**: Containing SNP research data.
     """
+    # try:
+    #     # Parse the corrected JSON
+    #     print("Parsed payload:", payload)
+    #     # # Validate against the Pydantic model
+    #     # validated_payload = RsidsPayload(**payload)
+    #     # print("Validated payload:", validated_payload)
+    # except json.JSONDecodeError:
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail="Invalid JSON format. Ensure keys and strings use double quotes."
+    #     )
+    # except Exception as e:
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail=f"Validation error: {str(e)}"
+    #     )
+    
     rsid = payload.rsidsList  # Extract the rsidsList field
-    print('Received rsid:', rsid)
+    # print("Received rsidsList:", rsid)
+    # rsid = validated_payload.rsidsList
+    # print("Validated rsidsList:", rsid)
 
     # Validate the list length
-    if len(rsid) < 1 or len(rsid) > 10:
-        raise HTTPException(
-            status_code=400,
-            detail="The rsidsList must contain between 1 and 10 items."
-        )
+    # if len(rsid) < 1 or len(rsid) > 100:
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail="Out of range: The rsidsList must contain between 1 and 10 items."
+    #     )
     
-    # Call the genome controller to get the SNP research data
-    return genome_controller.get_snp_research(rsid)
+    # # Call the genome controller to get the SNP research data
+    return genome_controller.get_snp_research(rsid) 
 
 # E.g Body:
 # ["rs1000113", "rs1000597" ]

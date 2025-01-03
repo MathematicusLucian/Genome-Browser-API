@@ -36,13 +36,13 @@ def fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution
         conditions.append(f'{allele2_column} = ?')
         params.append(kwargs['allele2']) 
     if 'rsid' in kwargs and kwargs['rsid'] is not None:
-        print(kwargs['rsid'])
         if(type(kwargs['rsid'] == list)):
             print('list')
             rsids = "('"+"','".join(kwargs['rsid'])+"')"
             base_query += f' WHERE rsid IN {rsids} ' 
-            base_query += f' LIMIT 25 OFFSET {offset}' 
+            # base_query += f' LIMIT 25 OFFSET {offset}' 
         else:
+            print('not list')
             conditions.append(f'{rsid_column} = ?')
         params.append(kwargs['rsid'])
     if conditions:
@@ -51,7 +51,9 @@ def fetch_data_with_conditions(base_query, columns, offset, sql_worker_execution
         params.append(offset)
         results_list = sql_worker_execution_function(base_query, tuple(params))
     else:
+        print('no conditions, base_query', base_query)
         results_list = sql_worker_execution_function(base_query) 
+        print('results_list', results_list)
     results_list = pd.DataFrame(results_list, columns=columns)
     json_str = results_list.to_json(orient='records', date_format='iso')
     return json.loads(json_str) 

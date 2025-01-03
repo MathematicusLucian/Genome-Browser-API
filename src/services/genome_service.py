@@ -117,7 +117,7 @@ class GenomeService:
         if gene_variant_research is not None:
             return gene_variant_research
         else:
-            self._generate_error_message(column_name, kwargs)
+            self._generate_error_message(column_name, kwargs) 
 
     def fetch_snp_pairs_data_by_genotype(self, **kwargs): 
         column_name = 'rsid'  
