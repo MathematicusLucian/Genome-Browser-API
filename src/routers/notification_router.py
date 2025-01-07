@@ -15,7 +15,7 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title="WebSocket API",
         version="1.0.0",
-        description="This is the Genome Browser API for real-time notifications (employs WebSockets)",
+        description="This is the GenomeSearch API for real-time notifications (employs WebSockets)",
         routes=notification_router.routes,
     )
     openapi_schema["paths"]["/ws"] = {

@@ -13,14 +13,14 @@ root_router = APIRouter()
 @root_router.get("/")
 def root():
     """
-        Return a welcome message for the Genome Browser API.
+        Return a welcome message for the GenomeSearch API.
 
         - **content**: A dictionary containing the welcome message.
 
         Returns:
         - **JSONResponse**: With a welcome message.
     """
-    return JSONResponse(content={"Genome Browser API": "Welcome to Genome Browser API"})
+    return JSONResponse(content={"GenomeSearch API": "Welcome to GenomeSearch API"})
 
 # other routers
 

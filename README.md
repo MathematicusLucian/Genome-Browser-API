@@ -1,14 +1,14 @@
-# Genome-Browser-API 🔬🧬
+# Genome=Search-API 🔬🧬
 
 ## Overview
 
-The Genome Browser scans/analyses DNA files from popular family tree providers (23andMe, Ancestry.com, etc.), comparing the genome of the user with published literature on health risks/conditions that their gene variants are correlated to. SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
+The GenomeSearch scans/analyses DNA files from popular family tree providers (23andMe, Ancestry.com, etc.), comparing the genome of the user with published literature on health risks/conditions that their gene variants are correlated to. SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
 
 For security reasons, the user's patient data is not shared to the server, but remains on their machine (in the web browser **IndexedDB**.) The SNP data from published literature is provisioned by the server.
 
-- This repo is the Genome Browser API/Orchestrator is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
+- This repo is the GenomeSearch API/Orchestrator is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.
 
-- (The UI for **React**-based (TypeScript) UI client application (with **NextJs**), and which queries the Genome Browser API is here: [Genome Browser UI](https://github.com/MathematicusLucian/Genome-Browser-UI))
+- (The UI for **React**-based (TypeScript) UI client application (with **NextJs**), and which queries the GenomeSearch API is here: [GenomeSearch UI](https://github.com/MathematicusLucian/Genome=Search-UI))
 
 ![Swagger](./assets/endpoints_swagger.png)
 
@@ -124,8 +124,8 @@ There are several options:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/mathematicuslucian/genome-browser-api.git
-   cd genome-browser-api
+   git clone https://github.com/mathematicuslucian/Genome=Search-api.git
+   cd Genome=Search-api
    ```
 
 2. Install the dependencies:

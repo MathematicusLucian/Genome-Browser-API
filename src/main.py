@@ -5,8 +5,8 @@ from routers.root_router import root_router
 
 # Routing
 app = FastAPI(
-    title="Genome Browser API",
-    description="The Genome Browser API is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.",
+    title="GenomeSearch API",
+    description="The GenomeSearch API is a **FastAPI**-based (Python) server application (with **Uvicorn**), and which provides endpoints for managing and querying genome (gene variant) data (patient data is combined with SNP pairs data to show health risks.) SNP data is sourced from several sources, i.e. SNPedia, Ensembl, and GProfiler.",
     version="1.0.0"
 )
 app.include_router(root_router)
